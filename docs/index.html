@@ -75,27 +75,42 @@
 <span id="git2s3-main"></span><h1>Git2S3 - Main<a class="headerlink" href="#module-git2s3.main" title="Permalink to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="git2s3.main.Git2S3">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">git2s3.main.</span></span><span class="sig-name descname"><span class="pre">Git2S3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#git2s3.main.Git2S3" title="Permalink to this definition">¶</a></dt>
-<dd><p>Object to clone all repositories from a target owner/organization on GitHub.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">git2s3.main.</span></span><span class="sig-name descname"><span class="pre">Git2S3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">os.PathLike</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.env'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_per_page</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#git2s3.main.Git2S3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiates Git2S3 object to clone all repos/wiki/gists from GitHub and upload to S3.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Git2S3</span>
 </pre></div>
 </div>
-<p>Instantiate the Git2S3 object.</p>
+<p>Loads all the necessary args, creates a connection to GitHub API and S3 to perform the backup.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Keyword Arguments<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>env</strong> – Environment configuration.</p></li>
+<li><p><strong>env_file</strong> – Environment configuration.</p></li>
 <li><p><strong>logger</strong> – Bring your own logger object.</p></li>
+<li><p><strong>max_per_page</strong> – Maximum number of repos to fetch per page.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="git2s3.main.Git2S3.get_all_repos">
-<span class="sig-name descname"><span class="pre">get_all_repos</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.get_all_repos" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterate through a target owner/organization to get all available repositories.</p>
+<dt class="sig sig-object py" id="git2s3.main.Git2S3.get_all">
+<span class="sig-name descname"><span class="pre">get_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Fields</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Generator</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.get_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterate through a target owner/organization to get all available repositories/gists.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Yields<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Generator[Dict[str, str]]</em> – Yields a dictionary of each repo’s information.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>field</strong> – Field type to clone.</p>
+</dd>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Generator[Dict[str, str]]</em> – Yields a dictionary of each repo’s information.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="git2s3.main.Git2S3.clone_wiki">
+<span class="sig-name descname"><span class="pre">clone_wiki</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Field</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.clone_wiki" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clone all the wikis from the repository.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>field</strong> – Field model to store repository/gist information.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -103,7 +118,7 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="git2s3.main.Git2S3.worker">
 <span class="sig-name descname"><span class="pre">worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.worker" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clones repository from GitHub.</p>
+<dd><p>Clones repository/gist/wiki from GitHub.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>repo</strong> – Repository information as JSON payload.</p>
@@ -119,8 +134,16 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="git2s3.main.Git2S3.cloner">
-<span class="sig-name descname"><span class="pre">cloner</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.cloner" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clones all the repos concurrently.</p>
+<span class="sig-name descname"><span class="pre">cloner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.cloner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clones all the repos/gists concurrently.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> – Function to get all repos/gists.</p></li>
+<li><p><strong>field</strong> – Field type to clone.</p></li>
+</ul>
+</dd>
+</dl>
 <p class="rubric">References</p>
 <p><a class="reference external" href="https://github.com/orgs/community/discussions/44515">https://github.com/orgs/community/discussions/44515</a></p>
 </dd></dl>
@@ -147,9 +170,9 @@
 <ul class="simple">
 <li><p><strong>git_api_url</strong> - GitHub API endpoint to fetch all repos within an organization or owner.</p></li>
 <li><p><strong>git_owner</strong> - GitHub owner or organization name.</p></li>
+<li><p><strong>gist_owner</strong> - GitHub owner name for gists.</p></li>
 <li><p><strong>git_token</strong> - GitHub token to get ALL repos (including private).</p></li>
-<li><p><strong>include_gist</strong> - Includes Gists in the backup.</p></li>
-<li><p><strong>zipper</strong> - Downloads and uploads as tar/zip files to S3.</p></li>
+<li><p><strong>fields</strong> - Fields options to restore. Defaults to all.</p></li>
 <li><p><strong>clone_dir</strong> - Backup location to store the files locally.</p></li>
 <li><p><strong>debug</strong> - Boolean flag to enable debug level logging. Does not apply when custom logger is used.</p></li>
 <li><p><strong>log</strong> - Log options to log to a <code class="docutils literal notranslate"><span class="pre">file</span></code> or <code class="docutils literal notranslate"><span class="pre">stdout</span></code>. Does not apply when custom logger is used.</p></li>
@@ -157,6 +180,7 @@
 <li><p><strong>aws_access_key_id</strong> - AWS access key ID. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_ACCESS_KEY_ID</span></code> by default.</p></li>
 <li><p><strong>aws_secret_access_key</strong> - AWS secret key. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_SECRET_ACCESS_KEY</span></code> by default.</p></li>
 <li><p><strong>aws_region_name</strong> - S3 bucket’s region. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_DEFAULT_REGION</span></code> by default.</p></li>
+<li><p><strong>aws_bucket_name</strong> - AWS bucket name to store the backups.</p></li>
 </ul>
 <p>Create a new model by parsing and validating input data from keyword arguments.</p>
 <p>Raises [<cite>ValidationError</cite>][pydantic_core.ValidationError] if the input data cannot be
@@ -173,18 +197,18 @@ validated to form a valid model.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="git2s3.config.EnvConfig.gist_owner">
+<span class="sig-name descname"><span class="pre">gist_owner</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#git2s3.config.EnvConfig.gist_owner" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="git2s3.config.EnvConfig.git_token">
 <span class="sig-name descname"><span class="pre">git_token</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#git2s3.config.EnvConfig.git_token" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="git2s3.config.EnvConfig.include_gist">
-<span class="sig-name descname"><span class="pre">include_gist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#git2s3.config.EnvConfig.include_gist" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="git2s3.config.EnvConfig.zipper">
-<span class="sig-name descname"><span class="pre">zipper</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#git2s3.config.EnvConfig.zipper" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="git2s3.config.EnvConfig.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Fields</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Fields</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#git2s3.config.EnvConfig.fields" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -226,6 +250,38 @@ validated to form a valid model.</p>
 <dt class="sig sig-object py" id="git2s3.config.EnvConfig.aws_bucket_name">
 <span class="sig-name descname"><span class="pre">aws_bucket_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#git2s3.config.EnvConfig.aws_bucket_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="git2s3.config.EnvConfig.from_env_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_env_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#git2s3.config.EnvConfig" title="git2s3.config.EnvConfig"><span class="pre">EnvConfig</span></a></span></span><a class="headerlink" href="#git2s3.config.EnvConfig.from_env_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an instance of EnvConfig from environment file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> – Name of the env file.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><p>Loading environment variables from files are an additional feature.</p></li>
+<li><p>Both the system’s and session’s env vars are processed by default.</p></li>
+</ul>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Loads the <code class="docutils literal notranslate"><span class="pre">EnvConfig</span></code> model.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#git2s3.config.EnvConfig" title="git2s3.config.EnvConfig">EnvConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="git2s3.config.EnvConfig.parse_fields">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Fields</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Fields</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#git2s3.config.EnvConfig.parse_fields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate and parse fields to remove all.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="git2s3.config.EnvConfig.parse_clone_dir">
