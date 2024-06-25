@@ -11,6 +11,7 @@ Backup GitHub projects to AWS S3
 
 [![pages][label-actions-pages]][gha_pages]
 [![pypi][label-actions-pypi]][gha_pypi]
+[![markdown][label-actions-markdown]][gha_md_valid]
 
 [![Pypi][label-pypi]][pypi]
 [![Pypi-format][label-pypi-format]][pypi-files]
@@ -89,9 +90,10 @@ pre-commit run --all-files
 &copy; Vignesh Rao
 
 Licensed under the [MIT License][license]
-    
+
 [//]: # (Labels)
 
+[label-actions-markdown]: https://github.com/thevickypedia/git2s3/actions/workflows/markdown.yaml/badge.svg
 [label-pypi-package]: https://img.shields.io/badge/Pypi%20Package-git2s3-blue?style=for-the-badge&logo=Python
 [label-sphinx-doc]: https://img.shields.io/badge/Made%20with-Sphinx-blue?style=for-the-badge&logo=Sphinx
 [label-pyversion]: https://img.shields.io/badge/python-3.10%20%7C%203.11-orange
@@ -108,6 +110,7 @@ Licensed under the [MIT License][license]
 [release-notes]: https://github.com/thevickypedia/git2s3/blob/master/release_notes.rst
 [gha_pages]: https://github.com/thevickypedia/git2s3/actions/workflows/pages/pages-build-deployment
 [gha_pypi]: https://github.com/thevickypedia/git2s3/actions/workflows/python-publish.yaml
+[gha_md_valid]: https://github.com/thevickypedia/git2s3/actions/workflows/markdown.yaml
 [google-docs]: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
 [pep8]: https://www.python.org/dev/peps/pep-0008/
 [isort]: https://pycqa.github.io/isort/
