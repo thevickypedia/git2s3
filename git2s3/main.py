@@ -7,13 +7,25 @@ import git
 import requests
 from git.exc import GitCommandError
 
-from git2s3 import config, models
+from git2s3 import config, squire
 
 
 class Git2S3:
+    """Object to clone all repositories from a target owner/organization on GitHub.
+
+    >>> Git2S3
+
+    """
+
     def __init__(self, **kwargs):
-        self.env = models.EnvConfig(**kwargs)
-        self.logger = kwargs.get("logger", config.default_logger(self.env))
+        """Instantiate the Git2S3 object.
+
+        Keyword Args:
+            env: Environment configuration.
+            logger: Bring your own logger object.
+        """
+        self.env = config.EnvConfig(**kwargs)
+        self.logger = kwargs.get("logger", squire.default_logger(self.env))
         self.repo = git.Repo()
         self.session = requests.Session()
         self.session.headers = {
@@ -35,9 +47,11 @@ class Git2S3:
             self.logger.debug("Fetching repos from page %d", idx)
             try:
                 response = self.session.get(
-                    url=f"{self.env.git_api_url}orgs/{self.env.git_owner}/repos?per_page=1&page={idx}"
+                    url=f"{self.env.git_api_url}orgs/{self.env.git_owner}/repos?per_page=100&page={idx}"
                 )
-            except (requests.RequestException, AssertionError):
+                assert response.ok, response.text
+            except (requests.RequestException, AssertionError) as error:
+                self.logger.error("Failed to fetch repos on page: %d - %s", idx, error)
                 break
             json_response = response.json()
             if json_response:
@@ -50,11 +64,15 @@ class Git2S3:
                 self.logger.debug("No repos found in page: %d, ending loop.", idx)
                 break
 
-    def worker(self, repo: Dict[str, str]):
+    def worker(self, repo: Dict[str, str]) -> None:
         """Clones repository from GitHub.
 
         Args:
             repo: Repository information as JSON payload.
+
+        Raises:
+            Exception:
+            If the thread fails to clone the repository.
         """
         self.logger.info("Cloning %s", repo.get("name"))
         repo_dest = os.path.join(self.env.clone_dir, repo.get("name"))
@@ -69,7 +87,7 @@ class Git2S3:
             # Raise an exception to indicate that the thread failed
             raise Exception(msg)
 
-    def cloner(self):
+    def cloner(self) -> None:
         """Clones all the repos concurrently.
 
         References:
@@ -87,6 +105,12 @@ class Git2S3:
                     futures[future],
                     future.exception(),
                 )
+
+    def start(self) -> None:
+        """Start the cloning process."""
+        self.logger.info("Starting the cloning process.")
+        self.cloner()
+        self.logger.info("Cloning process completed.")
 
 
 if __name__ == "__main__":

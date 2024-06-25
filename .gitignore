@@ -162,3 +162,11 @@ cython_debug/
 .idea/
 
 backup/
+
+# Sphinx
+!doc_gen/conf.py
+!doc_gen/index.rst
+!doc_gen/make.bat
+!doc_gen/Makefile
+!doc_gen/static.css
+doc_gen/*

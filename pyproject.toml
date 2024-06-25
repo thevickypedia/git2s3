@@ -23,6 +23,10 @@ packages = ["git2s3"]
 [tool.setuptools.dynamic]
 version = {attr = "git2s3.version"}
 
+[project.scripts]
+# sends all the args to commandline function, where the arbitary commands as processed accordingly
+git2s3 = "git2s3:commandline"
+
 [build-system]
 requires      = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
