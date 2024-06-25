@@ -12,10 +12,6 @@ Welcome to Git2S3's documentation!
 
    README
 
-Installer
-=========
-.. automodule:: git2s3.__init__
-
 Git2S3 - Main
 =============
 .. automodule:: git2s3.main

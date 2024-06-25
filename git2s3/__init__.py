@@ -2,18 +2,45 @@
 
 import sys
 
+import click
+
 from git2s3.main import Git2S3
 
 version = "0.0.0-a"
 
 
-def commandline() -> None:
-    """Command-line entrypoint."""
+@click.command()
+@click.argument("start", required=False)
+@click.option("--version", "-V", is_flag=True, help="Prints the version.")
+@click.option("--help", "-H", is_flag=True, help="Prints the help section.")
+@click.option(
+    "--env",
+    "-E",
+    type=click.Path(exists=True),
+    help="Environment configuration filepath.",
+)
+@click.option(
+    "--max", "-M", type=int, help="Maximum number of repos/gists to fetch per page."
+)
+def commandline(*args, **kwargs) -> None:
+    """Starter function to invoke Git2S3 via CLI commands.
+
+    **Flags**
+        - ``--version | -V``: Prints the version.
+        - ``--help | -H``: Prints the help section.
+        - ``--env | -E``: Environment configuration filepath.
+        - ``--max | -M``: Maximum number of repos/gists to fetch per page.
+
+    **Commands**
+        ``start | run``: Initiates the backup process.
+    """
     assert sys.argv[0].endswith("git2s3"), "Invalid commandline trigger!!"
     options = {
-        "start | run": "Initiates Git2S3 process.",
-        "version | -v | --version | -V": "Prints the version.",
-        "help | --help": "Prints the help section.",
+        "--version | -V": "Prints the version.",
+        "--help | -H": "Prints the help section.",
+        "--env | -E": "Environment configuration filepath.",
+        "--max | -M": "Maximum number of repos/gists to fetch per page.",
+        "start | run": "Initiates the backup process.",
     }
     # weird way to increase spacing to keep all values monotonic
     _longest_key = len(max(options.keys()))
@@ -22,22 +49,21 @@ def commandline() -> None:
         f"{k} {'·' * (_longest_key - len(k) + 8)}→ {v}".expandtabs()
         for k, v in options.items()
     )
-    try:
-        arg = sys.argv[1].lower()
-    except (IndexError, AttributeError):
-        print(
-            f"Cannot proceed without arbitrary commands. Please choose from {choices}"
+    if kwargs.get("version"):
+        click.echo(f"Git2S3: {version}")
+        sys.exit(0)
+    if kwargs.get("help"):
+        click.echo(
+            f"Usage: git2s3 [arbitrary-command]\nOptions (and corresponding behavior):{choices}"
         )
-        exit(1)
-
-    match arg:
-        case "start" | "run":
-            Git2S3().start()
-        case "version" | "-v" | "-V" | "--version":
-            print(f"Git2S3 {version}")
-        case "help" | "--help":
-            print(
-                f"Usage: git2s3 [arbitrary-command]\nOptions (and corresponding behavior):{choices}"
-            )
-        case _:
-            print(f"Unknown Option: {arg}\nArbitrary commands must be one of {choices}")
+        sys.exit(0)
+    if kwargs.get("start"):
+        # Click doesn't support assigning defaults like traditional dictionaries, so kwargs.get("max", 100) won't work
+        Git2S3(
+            env_file=kwargs.get("env") or ".env", max_per_page=kwargs.get("max") or 100
+        ).start()
+        sys.exit(0)
+    click.echo(
+        f"Usage: git2s3 [arbitrary-command]\nOptions (and corresponding behavior):{choices}"
+    )
+    sys.exit(1)
