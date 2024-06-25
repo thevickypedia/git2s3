@@ -1,2 +1,2 @@
-# git2s3
-Backup Git repos to AWS S3
+# Git2S3
+Backup GitHub projects to AWS S3
