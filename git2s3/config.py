@@ -2,20 +2,20 @@ import logging
 import os
 from datetime import datetime
 
-from git2s3.models import LogOptions
+from git2s3.models import LogOptions, EnvConfig
 
 
-def default_logger(log: LogOptions) -> logging.Logger:
+def default_logger(env: EnvConfig) -> logging.Logger:
     """Generates a default console logger.
 
     Args:
-        log: Log option chosen by the user.
+        env: Environment configuration.
 
     Returns:
         logging.Logger:
         Logger object.
     """
-    if log == LogOptions.file:
+    if env.log == LogOptions.file:
         if not os.path.isdir("logs"):
             os.mkdir("logs")
         logfile: str = datetime.now().strftime(
@@ -25,7 +25,10 @@ def default_logger(log: LogOptions) -> logging.Logger:
     else:
         handler = logging.StreamHandler()
     logger = logging.getLogger(__name__)
-    logger.setLevel(level=logging.INFO)
+    if env.debug:
+        logger.setLevel(level=logging.DEBUG)
+    else:
+        logger.setLevel(level=logging.INFO)
     handler.setFormatter(
         fmt=logging.Formatter(
             fmt="%(asctime)s - %(levelname)-8s - [%(funcName)s:%(lineno)d] - %(message)s"

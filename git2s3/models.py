@@ -9,7 +9,6 @@ if sys.version_info.minor > 10:
 else:
     from enum import Enum
 
-
     class StrEnum(str, Enum):
         """Override for python 3.10 due to lack of StrEnum."""
 
@@ -54,9 +53,7 @@ class EnvConfig(BaseSettings):
         if os.path.isdir(os.path.dirname(value)):
             os.makedirs(value)
             return value
-        raise ValueError(
-            f"{value!r} is neither a valid path, nor a potential path"
-        )
+        raise ValueError(f"{value!r} is neither a valid path, nor a potential path")
 
     class Config:
         """Environment variables configuration."""
