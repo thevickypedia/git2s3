@@ -102,25 +102,17 @@ def default_logger(env: config.EnvConfig) -> logging.Logger:
     return logger
 
 
-def check_file_presence(root: str | os.PathLike) -> bool:
+def check_file_presence(source_dir: str | os.PathLike) -> bool:
     """Get a list of all subdirectories and check for file presence.
 
     Args:
-        root: Root directory to check for file presence.
+        source_dir: Root directory to check for file presence.
 
     Returns:
         bool:
         Returns a bool indicating if files are present in the subdirectories.
     """
-    for subdir in [
-        os.path.join(root, subdir)
-        for subdir in os.listdir(root)
-        if os.path.isdir(os.path.join(root, subdir))
-    ]:
-        if [
-            file
-            for file in os.listdir(subdir)
-            if os.path.isfile(os.path.join(subdir, file))
-        ]:
+    for root, dirs, files in os.walk(source_dir):
+        if any(file.endswith(".zip") for file in files):
             return True
     return False

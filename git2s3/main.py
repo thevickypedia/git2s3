@@ -8,10 +8,12 @@ from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from multiprocessing.pool import ThreadPool
 from typing import Dict
+from urllib.parse import urlsplit, urlunsplit
 
 import git
 import requests
 from git.exc import GitCommandError
+from pydantic import HttpUrl
 
 from git2s3 import config, exc, s3, squire
 
@@ -46,8 +48,8 @@ class Git2S3:
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        # fixme: clone might fail with authentication error if git CLI isn't configured
         self.repo = git.Repo()
+        self.origin = self.repo.remote()
         self.clone_dir = os.path.join(os.getcwd(), self.env.git_owner)
         warnings.simplefilter("always", exc.DirectoryExists)
         warnings.simplefilter("always", exc.UnsupportedSource)
@@ -140,6 +142,31 @@ class Git2S3:
                 self.logger.debug("No repos found in page: %d, ending loop.", idx)
                 break
 
+    def set_pat(self, url: str | HttpUrl) -> None:
+        """Creates an authenticated URL by updating the netloc, and sets that as the origin URL.
+
+        Args:
+            url: Takes the repository/gist/wiki URL as input.
+
+        See Also:
+            - This step is not required for:
+                - Public repositories/gists/wiki
+                -
+        """
+        url_split = urlsplit(str(url))
+        authed_netloc = f"{self.env.git_token}@{url_split.netloc}"
+        joined = urlunsplit(
+            (
+                url_split.scheme,
+                authed_netloc,
+                url_split.path,
+                url_split.query,
+                url_split.fragment,
+            )
+        )
+        self.origin.config_writer.set("url", joined)
+        self.origin.config_writer.release()
+
     def clone_wiki(self, datastore: config.DataStore) -> None:
         """Clone all the wikis from the repository.
 
@@ -162,6 +189,7 @@ class Git2S3:
         if not os.path.isdir(wiki_dest):
             os.makedirs(wiki_dest)
         try:
+            self.set_pat(wiki_url)
             self.repo.clone_from(wiki_url, wiki_dest)
         except GitCommandError as error:
             msg = error.stderr or error.stdout or ""
@@ -203,6 +231,7 @@ class Git2S3:
         if not os.path.isdir(repo_dest):
             os.makedirs(repo_dest)
         try:
+            self.set_pat(datastore.clone_url)
             self.repo.clone_from(datastore.clone_url, repo_dest)
             try:
                 if datastore.description:
@@ -284,7 +313,7 @@ class Git2S3:
                     self.cloner, args=(config.SourceControl.gist,)
                 )
             )
-        if not all([process.get() for process in processes]):
+        if not all(process.get() for process in processes):
             self.logger.error(
                 "Cloning process did not complete successfully. Skipping S3 backup."
             )
@@ -296,4 +325,4 @@ class Git2S3:
             s3_upload.trigger()
             self.logger.info("S3 upload process completed.")
         else:
-            self.logger.warning("No files found to upload to S3.")
+            self.logger.warning("No files found for S3 upload process.")

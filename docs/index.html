@@ -109,6 +109,30 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="git2s3.main.Git2S3.set_pat">
+<span class="sig-name descname"><span class="pre">set_pat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Url</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.set_pat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an authenticated URL by updating the netloc, and sets that as the origin URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>url</strong> – Takes the repository/gist/wiki URL as input.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>This step is not required for:</dt><dd><ul>
+<li><p>Public repositories/gists/wiki</p></li>
+<li></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="git2s3.main.Git2S3.clone_wiki">
 <span class="sig-name descname"><span class="pre">clone_wiki</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datastore</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#git2s3.config.DataStore" title="git2s3.config.DataStore"><span class="pre">DataStore</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.clone_wiki" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clone all the wikis from the repository.</p>
@@ -272,11 +296,11 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="git2s3.squire.check_file_presence">
-<span class="sig-prename descclassname"><span class="pre">git2s3.squire.</span></span><span class="sig-name descname"><span class="pre">check_file_presence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">os.PathLike</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#git2s3.squire.check_file_presence" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">git2s3.squire.</span></span><span class="sig-name descname"><span class="pre">check_file_presence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">os.PathLike</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#git2s3.squire.check_file_presence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of all subdirectories and check for file presence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>root</strong> – Root directory to check for file presence.</p>
+<dd class="field-odd"><p><strong>source_dir</strong> – Root directory to check for file presence.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Returns a bool indicating if files are present in the subdirectories.</p>

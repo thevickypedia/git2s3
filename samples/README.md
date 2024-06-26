@@ -1,13 +1,11 @@
 ## Sample Environment Variables
 
 Environment variables can be sourced using any `plaintext` / `JSON` / `YAML` file.
-
 The filepath should be provided as an argument during object instantiation.
 
-Samples values are randomly generated strings from https://pinetools.com/random-string-generator
+⚠️ Sample values are randomly generated strings from https://pinetools.com/random-string-generator
 
-> _By default, `Git2S3` will look for a `.env` file in the current working directory._<br>
-> Refer [samples] directory for examples.
+> By default, `Git2S3` will look for a `.env` file in the current working directory.
 
 ### Examples
 
