@@ -46,7 +46,7 @@
   <section id="git2s3">
 <h1>Git2S3<a class="headerlink" href="#git2s3" title="Permalink to this heading">¶</a></h1>
 <p>Backup GitHub projects to AWS S3</p>
-<p><img alt="Python" src="https://img.shields.io/badge/python-3.10%20%7C%203.11-orange" /></p>
+<p><img alt="Python" src="https://img.shields.io/badge/python-3.10%20%7C%203.11-blue" /></p>
 <p><strong>Platform Supported</strong></p>
 <p><img alt="Platform" src="https://img.shields.io/badge/Platform-Linux%7CmacOS%7CWindows-1f425f.svg" /></p>
 <p><strong>Deployments</strong></p>
@@ -83,6 +83,43 @@
 <blockquote>
 <div><p>Use <code class="docutils literal notranslate"><span class="pre">git2s3</span> <span class="pre">--help</span></code> for usage instructions.</p>
 </div></blockquote>
+</section>
+<section id="environment-variables">
+<h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this heading">¶</a></h2>
+<details>
+<summary><strong>Sourcing environment variables from an env file</strong></summary><p>Environment variables can be sourced using any <code class="docutils literal notranslate"><span class="pre">plaintext</span></code> / <code class="docutils literal notranslate"><span class="pre">JSON</span></code> / <code class="docutils literal notranslate"><span class="pre">YAML</span></code> file.
+The filepath should be provided as an argument during object instantiation.</p>
+<blockquote>
+<div><p><em>By default, <code class="docutils literal notranslate"><span class="pre">Git2S3</span></code> will look for a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file in the current working directory.</em></p>
+</div></blockquote>
+<p><strong>Examples</strong></p>
+<ul class="simple">
+<li><p><strong>CLI</strong></p></li>
+</ul>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git2s3<span class="w"> </span>start<span class="w"> </span>--env-file<span class="w"> </span><span class="s2">&quot;/path/to/env/file&quot;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>IDE</strong></p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">git2s3</span>
+<span class="n">backup</span> <span class="o">=</span> <span class="n">git2s3</span><span class="o">.</span><span class="n">Git2S3</span><span class="p">(</span><span class="n">env_file</span><span class="o">=</span><span class="s1">&#39;/path/to/env/file&#39;</span><span class="p">)</span>
+<span class="n">backup</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</pre></div>
+</div>
+</details><ul class="simple">
+<li><p><strong>GIT_API_URL</strong> - GitHub API endpoint. Defaults to <code class="docutils literal notranslate"><span class="pre">https://api.github.com/</span></code></p></li>
+<li><p><strong>GIT_OWNER</strong> - GitHub profile owner or organization name.</p></li>
+<li><p><strong>GIT_TOKEN</strong> - GitHub token to get ALL repos (including private).</p></li>
+<li><p><strong>FIELDS</strong> - Fields options to restore. Defaults to all.</p></li>
+<li><p><strong>LOG</strong> - Log options to log to a <code class="docutils literal notranslate"><span class="pre">file</span></code> or <code class="docutils literal notranslate"><span class="pre">stdout</span></code>. <em>Does not apply when custom logger is used</em></p></li>
+<li><p><strong>DEBUG</strong> - Boolean flag to enable debug level logging. <em>Does not apply when custom logger is used</em></p></li>
+<li><p><strong>AWS_PROFILE_NAME</strong> - AWS profile name. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_DEFAULT_PROFILE</span></code> by default.</p></li>
+<li><p><strong>AWS_ACCESS_KEY_ID</strong> - AWS access key ID. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_ACCESS_KEY_ID</span></code> by default.</p></li>
+<li><p><strong>AWS_SECRET_ACCESS_KEY</strong> - AWS secret key. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_SECRET_ACCESS_KEY</span></code> by default.</p></li>
+<li><p><strong>AWS_REGION_NAME</strong> - S3 bucket’s region. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_DEFAULT_REGION</span></code> by default.</p></li>
+<li><p><strong>AWS_BUCKET_NAME</strong> - AWS bucket name to store the backups.</p></li>
+</ul>
 </section>
 <section id="coding-standards">
 <h2>Coding Standards<a class="headerlink" href="#coding-standards" title="Permalink to this heading">¶</a></h2>
@@ -142,6 +179,7 @@ markdown files (including Wiki pages)</p>
     <ul>
 <li><a class="reference internal" href="#">Git2S3</a><ul>
 <li><a class="reference internal" href="#kick-off">Kick off</a></li>
+<li><a class="reference internal" href="#environment-variables">Environment Variables</a></li>
 <li><a class="reference internal" href="#coding-standards">Coding Standards</a></li>
 <li><a class="reference internal" href="#release-notes">Release Notes</a></li>
 <li><a class="reference internal" href="#linting">Linting</a></li>

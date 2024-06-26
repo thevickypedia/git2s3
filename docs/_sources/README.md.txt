@@ -46,6 +46,44 @@ git2s3 start
 
 > Use `git2s3 --help` for usage instructions.
 
+## Environment Variables
+
+<details>
+<summary><strong>Sourcing environment variables from an env file</strong></summary>
+
+Environment variables can be sourced using any `plaintext` / `JSON` / `YAML` file.
+The filepath should be provided as an argument during object instantiation.
+
+> _By default, `Git2S3` will look for a `.env` file in the current working directory._
+
+**Examples**
+
+- **CLI**
+```shell
+git2s3 start --env-file "/path/to/env/file"
+```
+
+- **IDE**
+```python
+import git2s3
+backup = git2s3.Git2S3(env_file='/path/to/env/file')
+backup.start()
+```
+
+</details>
+
+- **GIT_API_URL** - GitHub API endpoint. Defaults to `https://api.github.com/`
+- **GIT_OWNER** - GitHub profile owner or organization name.
+- **GIT_TOKEN** - GitHub token to get ALL repos (including private).
+- **FIELDS** - Fields options to restore. Defaults to all.
+- **LOG** - Log options to log to a ``file`` or ``stdout``. _Does not apply when custom logger is used_
+- **DEBUG** - Boolean flag to enable debug level logging. _Does not apply when custom logger is used_
+- **AWS_PROFILE_NAME** - AWS profile name. Uses the CLI config value ``AWS_DEFAULT_PROFILE`` by default.
+- **AWS_ACCESS_KEY_ID** - AWS access key ID. Uses the CLI config value ``AWS_ACCESS_KEY_ID`` by default.
+- **AWS_SECRET_ACCESS_KEY** - AWS secret key. Uses the CLI config value ``AWS_SECRET_ACCESS_KEY`` by default.
+- **AWS_REGION_NAME** - S3 bucket's region. Uses the CLI config value ``AWS_DEFAULT_REGION`` by default.
+- **AWS_BUCKET_NAME** - AWS bucket name to store the backups.
+
 ## Coding Standards
 Docstring format: [`Google`][google-docs] <br>
 Styling conventions: [`PEP 8`][pep8] and [`isort`][isort]
@@ -96,7 +134,7 @@ Licensed under the [MIT License][license]
 [label-actions-markdown]: https://github.com/thevickypedia/git2s3/actions/workflows/markdown.yaml/badge.svg
 [label-pypi-package]: https://img.shields.io/badge/Pypi%20Package-git2s3-blue?style=for-the-badge&logo=Python
 [label-sphinx-doc]: https://img.shields.io/badge/Made%20with-Sphinx-blue?style=for-the-badge&logo=Sphinx
-[label-pyversion]: https://img.shields.io/badge/python-3.10%20%7C%203.11-orange
+[label-pyversion]: https://img.shields.io/badge/python-3.10%20%7C%203.11-blue
 [label-platform]: https://img.shields.io/badge/Platform-Linux|macOS|Windows-1f425f.svg
 [label-actions-pages]: https://github.com/thevickypedia/git2s3/actions/workflows/pages/pages-build-deployment/badge.svg
 [label-actions-pypi]: https://github.com/thevickypedia/git2s3/actions/workflows/python-publish.yaml/badge.svg

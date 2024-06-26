@@ -56,8 +56,9 @@ html_theme_options = {"body_max_width": "80%"}
 html_static_path = ["_static"]
 
 # Add docstrings from __init__ method
+# This will also include __init__ docs from 'pydantic.BaseModel' and 'pydantic.BaseSettings'
 # Reference: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autoclass_content
-autoclass_content = "both"
+# autoclass_content = "both"
 
 # Include private methods/functions
 # Reference: https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#confval-autodoc_default_options

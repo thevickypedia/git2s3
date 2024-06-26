@@ -52,7 +52,7 @@ def field_detector(repo: Dict[str, str], env: EnvConfig) -> Field:
         Field:
         Field model.
     """
-    if repo.get("comments_url") == f"{env.git_api_url}gists/{repo['id']}/comments":
+    if repo.get("comments_url") == f"{env.git_api_url}/gists/{repo['id']}/comments":
         return Field(
             field=Fields.gist,
             clone_url=repo["git_pull_url"],

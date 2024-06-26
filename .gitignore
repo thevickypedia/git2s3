@@ -161,8 +161,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
-backup/
-
 # Sphinx
 !doc_gen/conf.py
 !doc_gen/index.rst
