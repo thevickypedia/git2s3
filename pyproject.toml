@@ -8,7 +8,7 @@ license = { file = "LICENSE" }
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Development Status :: 2 - Pre-Alpha",  # todo: change dev status to "Development Status :: 5 - Production/Stable"
+    "Development Status :: 3 - Alpha",  # todo: change dev status to "Development Status :: 5 - Production/Stable"
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
@@ -22,6 +22,7 @@ packages = ["git2s3"]
 
 [tool.setuptools.dynamic]
 version = {attr = "git2s3.version"}
+dependencies = { file = ["requirements.txt"] }
 
 [project.scripts]
 # sends all the args to commandline function, where the arbitary commands as processed accordingly

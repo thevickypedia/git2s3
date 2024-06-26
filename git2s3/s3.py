@@ -6,7 +6,7 @@ import boto3
 from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
-from git2s3.config import EnvConfig
+from git2s3 import config, exc
 
 
 class Uploader:
@@ -20,7 +20,7 @@ class Uploader:
         logger: Logger object.
     """
 
-    def __init__(self, env: EnvConfig, logger: logging.Logger):
+    def __init__(self, env: config.EnvConfig, logger: logging.Logger):
         """Concurrent uploader object to upload files to S3.
 
         References:
@@ -59,7 +59,7 @@ class Uploader:
             self.s3_client.upload_file(local_file_path, self.bucket, s3_file_path)
             self.logger.info("Uploaded '%s' to 's3://%s'", s3_file_path, self.bucket)
         except (FileNotFoundError, BotoCoreError, ClientError) as error:
-            raise Exception(error)
+            raise exc.UploadError(error)
 
     def trigger(self) -> None:
         """Trigger to upload all file objects concurrently to S3."""

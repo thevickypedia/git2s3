@@ -87,31 +87,16 @@
 <section id="environment-variables">
 <h2>Environment Variables<a class="headerlink" href="#environment-variables" title="Permalink to this heading">¶</a></h2>
 <details>
-<summary><strong>Sourcing environment variables from an env file</strong></summary><p>Environment variables can be sourced using any <code class="docutils literal notranslate"><span class="pre">plaintext</span></code> / <code class="docutils literal notranslate"><span class="pre">JSON</span></code> / <code class="docutils literal notranslate"><span class="pre">YAML</span></code> file.
-The filepath should be provided as an argument during object instantiation.</p>
-<blockquote>
-<div><p><em>By default, <code class="docutils literal notranslate"><span class="pre">Git2S3</span></code> will look for a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file in the current working directory.</em></p>
+<summary><strong>Sourcing environment variables from an env file</strong></summary><blockquote>
+<div><p><em>By default, <code class="docutils literal notranslate"><span class="pre">Git2S3</span></code> will look for a <code class="docutils literal notranslate"><span class="pre">.env</span></code> file in the current working directory.</em><br>
+Refer <a class="reference external" href="https://github.com/thevickypedia/git2s3/tree/main/samples">samples</a> directory for examples.</p>
 </div></blockquote>
-<p><strong>Examples</strong></p>
-<ul class="simple">
-<li><p><strong>CLI</strong></p></li>
-</ul>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git2s3<span class="w"> </span>start<span class="w"> </span>--env-file<span class="w"> </span><span class="s2">&quot;/path/to/env/file&quot;</span>
-</pre></div>
-</div>
-<ul class="simple">
-<li><p><strong>IDE</strong></p></li>
-</ul>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">git2s3</span>
-<span class="n">backup</span> <span class="o">=</span> <span class="n">git2s3</span><span class="o">.</span><span class="n">Git2S3</span><span class="p">(</span><span class="n">env_file</span><span class="o">=</span><span class="s1">&#39;/path/to/env/file&#39;</span><span class="p">)</span>
-<span class="n">backup</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-</pre></div>
-</div>
 </details><ul class="simple">
 <li><p><strong>GIT_API_URL</strong> - GitHub API endpoint. Defaults to <code class="docutils literal notranslate"><span class="pre">https://api.github.com/</span></code></p></li>
 <li><p><strong>GIT_OWNER</strong> - GitHub profile owner or organization name.</p></li>
 <li><p><strong>GIT_TOKEN</strong> - GitHub token to get ALL repos (including private).</p></li>
-<li><p><strong>FIELDS</strong> - Fields options to restore. Defaults to all.</p></li>
+<li><p><strong>GIT_IGNORE</strong> - List of repositories/gists to ignore. Defaults to <code class="docutils literal notranslate"><span class="pre">[]</span></code></p></li>
+<li><p><strong>SOURCE</strong> - Source options <code class="docutils literal notranslate"><span class="pre">[repo,</span> <span class="pre">gist,</span> <span class="pre">wiki]</span></code> to back up. Defaults to all.</p></li>
 <li><p><strong>LOG</strong> - Log options to log to a <code class="docutils literal notranslate"><span class="pre">file</span></code> or <code class="docutils literal notranslate"><span class="pre">stdout</span></code>. <em>Does not apply when custom logger is used</em></p></li>
 <li><p><strong>DEBUG</strong> - Boolean flag to enable debug level logging. <em>Does not apply when custom logger is used</em></p></li>
 <li><p><strong>AWS_PROFILE_NAME</strong> - AWS profile name. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_DEFAULT_PROFILE</span></code> by default.</p></li>

@@ -1,5 +1,4 @@
 import logging
-import multiprocessing
 import os
 import secrets
 import shutil
@@ -7,13 +6,14 @@ import threading
 import warnings
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Callable, Dict
+from multiprocessing.pool import ThreadPool
+from typing import Dict
 
 import git
 import requests
 from git.exc import GitCommandError
 
-from git2s3 import config, s3, squire
+from git2s3 import config, exc, s3, squire
 
 
 class Git2S3:
@@ -37,9 +37,8 @@ class Git2S3:
         """Instantiates Git2S3 object to clone all repos/wiki/gists from GitHub and upload to S3."""
         assert 1 <= max_per_page <= 100, "'max_per_page' must be between 1 and 100"
         self.per_page = max_per_page
-        self.src_logger = logger
         self.env = squire.env_loader(env_file)
-        self.logger = self.src_logger or squire.default_logger(self.env)
+        self.logger = logger or squire.default_logger(self.env)
         self.session = requests.Session()
         self.session.headers = {
             "Accept": "application/vnd.github+json",
@@ -47,16 +46,25 @@ class Git2S3:
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/x-www-form-urlencoded",
         }
+        # fixme: clone might fail with authentication error if git CLI isn't configured
         self.repo = git.Repo()
         self.clone_dir = os.path.join(os.getcwd(), self.env.git_owner)
+        warnings.simplefilter("always", exc.DirectoryExists)
+        warnings.simplefilter("always", exc.UnsupportedSource)
+        if os.path.isdir(self.clone_dir) and os.listdir(self.clone_dir):
+            warnings.warn(
+                "The clone directory is not empty. Deleting the contents to avoid conflicts.",
+                exc.DirectoryExists,
+            )
+            shutil.rmtree(self.clone_dir)
         profile = self.profile_type()
         if profile == "orgs":
-            if config.Fields.gist in self.env.fields:
+            if config.SourceControl.gist in self.env.source:
                 warnings.warn(
-                    f"Gists are not supported for organizations. Removing {config.Fields.gist!r} from the fields.",
-                    UserWarning,
+                    f"Gists are not supported for organizations. Removing {config.SourceControl.gist!r} from source.",
+                    exc.UnsupportedSource,
                 )
-                self.env.fields.remove(config.Fields.gist)
+                self.env.source.remove(config.SourceControl.gist)
         self.base_url = f"{self.env.git_api_url}/{profile}/{self.env.git_owner}"
 
     def profile_type(self) -> str:
@@ -82,28 +90,28 @@ class Git2S3:
             return "users"
         except (requests.RequestException, AssertionError):
             pass
-        raise Exception(
+        raise exc.InvalidOwner(
             f"Failed to get the profile type for {self.env.git_owner}. Please check the owner/organization name."
         )
 
-    def get_all(self, field: config.Fields) -> Generator[Dict[str, str]]:
+    def get_all(self, source: config.SourceControl) -> Generator[Dict[str, str]]:
         """Iterate through a target owner/organization to get all available repositories/gists.
 
         Args:
-            field: Field type to clone.
+            source: Source type to clone.
 
         Yields:
             Generator[Dict[str, str]]:
             Yields a dictionary of each repo's information.
         """
-        if field == config.Fields.repo:
+        if source == config.SourceControl.repo:
             endpoint = f"{self.base_url}/repos"
-        elif field == config.Fields.gist:
+        elif source == config.SourceControl.gist:
             endpoint = f"{self.base_url}/gists"
         else:
             # This won't occur programmatically, but here just in case
-            raise ValueError(
-                f"Invalid field type. Please choose from {config.Fields.repo.value!r} or {config.Fields.gist.value!r}"
+            raise exc.InvalidSource(
+                f"Invalid field type. Please choose from {config.SourceControl.repo!r} or {config.SourceControl.gist!r}"
             )
         idx = 1
         while True:
@@ -115,6 +123,10 @@ class Git2S3:
                 assert response.ok, response.text
             except (requests.RequestException, AssertionError) as error:
                 self.logger.error("Failed to fetch repos on page: %d - %s", idx, error)
+                if idx == 1:
+                    raise exc.GitHubAPIError(
+                        f"Failed to fetch {source.value}s from {self.env.git_owner!r}."
+                    )
                 break
             json_response = response.json()
             if json_response:
@@ -128,22 +140,24 @@ class Git2S3:
                 self.logger.debug("No repos found in page: %d, ending loop.", idx)
                 break
 
-    def clone_wiki(self, field: config.Field) -> None:
+    def clone_wiki(self, datastore: config.DataStore) -> None:
         """Clone all the wikis from the repository.
 
         Args:
-            field: Field model to store repository/gist information.
+            datastore: DataStore model to store repository/gist information.
         """
-        field.field = config.Fields.wiki.value
-        self.logger.debug("Cloning wiki for %s", field.name)
-        wiki_url = str(field.clone_url).replace(".git", ".wiki.git")
-        if field.private:
+        datastore.source = config.SourceControl.wiki.value
+        self.logger.debug("Cloning wiki for %s", datastore.name)
+        wiki_url = str(datastore.clone_url).replace(".git", ".wiki.git")
+        if datastore.private:
             wiki_dest = str(
-                os.path.join(self.clone_dir, field.field, "private", field.name)
+                os.path.join(
+                    self.clone_dir, datastore.source, "private", datastore.name
+                )
             )
         else:
             wiki_dest = str(
-                os.path.join(self.clone_dir, field.field, "public", field.name)
+                os.path.join(self.clone_dir, datastore.source, "public", datastore.name)
             )
         if not os.path.isdir(wiki_dest):
             os.makedirs(wiki_dest)
@@ -165,33 +179,38 @@ class Git2S3:
             Exception:
             If the thread fails to clone the repository.
         """
-        target = squire.field_detector(repo, self.env)
-        self.logger.info("Cloning %s: %s", target.field, target.name)
-        if target.private:
+        datastore = squire.source_detector(repo, self.env)
+        self.logger.info("Cloning %s: %s", datastore.source, datastore.name)
+        if datastore.private:
             repo_dest = str(
-                os.path.join(self.clone_dir, target.field.value, "private", target.name)
+                os.path.join(
+                    self.clone_dir, datastore.source.value, "private", datastore.name
+                )
             )
         else:
             repo_dest = str(
-                os.path.join(self.clone_dir, target.field.value, "public", target.name)
+                os.path.join(
+                    self.clone_dir, datastore.source.value, "public", datastore.name
+                )
             )
         # only repos have this field anyway
-        if config.Fields.wiki in self.env.fields and repo.get("has_wiki"):
-            # run as daemon and don't care about the output
+        if config.SourceControl.wiki in self.env.source and repo.get("has_wiki"):
+            # run as daemon and don't care about the output for wiki
+            # 'has_wiki' flag will always be true even if there are no files to clone
             threading.Thread(
-                target=self.clone_wiki, args=(target,), daemon=True
+                target=self.clone_wiki, args=(datastore,), daemon=True
             ).start()
         if not os.path.isdir(repo_dest):
             os.makedirs(repo_dest)
         try:
-            self.repo.clone_from(target.clone_url, repo_dest)
+            self.repo.clone_from(datastore.clone_url, repo_dest)
             try:
-                if target.description:
+                if datastore.description:
                     desc_file = os.path.join(
                         repo_dest, f"description_{secrets.token_hex(2)}.txt"
                     )
                     with open(desc_file, "w") as desc:
-                        desc.write(target.description)
+                        desc.write(datastore.description)
                         desc.flush()
             except Exception as warning:
                 # Adding description file is only an added feature, so no need to fail
@@ -200,70 +219,81 @@ class Git2S3:
             if os.path.isfile(f"{repo_dest}.zip"):
                 shutil.rmtree(repo_dest)
             else:
-                self.logger.error("Failed to create a zip file for %s", target.name)
-                raise Exception(f"Failed to create a zip file for {target.name}")
+                self.logger.error("Failed to create a zip file for %s", datastore.name)
+                raise exc.ArchiveError(
+                    f"Failed to create a zip file for {datastore.name!r}"
+                )
         except GitCommandError as error:
             msg = error.stderr or error.stdout or ""
             msg = msg.strip().replace("\n", "").replace("'", "").replace('"', "")
             self.logger.error(msg)
             # Raise an exception to indicate that the thread failed
-            raise Exception(msg)
+            raise exc.Git2S3Error(msg)
 
-    def cloner(self, func: Callable, field: str) -> None:
+    def cloner(self, source: config.SourceControl) -> bool:
         """Clones all the repos/gists concurrently.
 
         Args:
-            func: Function to get all repos/gists.
-            field: Field type to clone.
+            source: Source type to clone.
+
+        See Also:
+            - Clones all the repos/gists concurrently using ThreadPoolExecutor.
+            - GitHub doesn't have a rate limit for cloning, so multi-threading is safe.
+            - This makes it depend on Git installed on the host machine.
 
         References:
             https://github.com/orgs/community/discussions/44515
+
+        Returns:
+            bool:
+            Returns a boolean flag to indicate if any of the threads failed.
         """
-        # Reload logger for child process
-        self.logger = self.src_logger or squire.default_logger(self.env)
         futures = {}
         with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-            for repo in func(field):
+            for repo in self.get_all(source):
+                identifier = repo.get("name") or repo.get("id")
+                if identifier.lower() in self.env.git_ignore:
+                    self.logger.info("Skipping %s: '%s'", source, identifier)
+                    continue
                 future = executor.submit(self.worker, repo)
-                futures[future] = repo.get("name") or repo.get("id")
+                futures[future] = identifier
+        return_flag = True
         for future in as_completed(futures):
             if future.exception():
                 self.logger.error(
                     "Thread cloning the %s '%s' received an exception: %s",
-                    field,
+                    source,
                     futures[future],
                     future.exception(),
                 )
+                return_flag = False
+        return return_flag
 
     def start(self) -> None:
-        """Start the cloning process."""
+        """Start the cloning process and upload to S3 once cloning completes successfully."""
         self.logger.info("Starting cloning process...")
         # Both processes run concurrently, calling the same function with different arguments
         processes = [
-            multiprocessing.Process(
-                target=self.cloner,
-                args=(
-                    self.get_all,
-                    config.Fields.repo,
-                ),
+            ThreadPool(processes=1).apply_async(
+                self.cloner, args=(config.SourceControl.repo,)
             )
         ]
-        if config.Fields.gist in self.env.fields:
+        if config.SourceControl.gist in self.env.source:
             processes.append(
-                multiprocessing.Process(
-                    target=self.cloner,
-                    args=(
-                        self.get_all,
-                        config.Fields.gist,
-                    ),
+                ThreadPool(processes=1).apply_async(
+                    self.cloner, args=(config.SourceControl.gist,)
                 )
             )
-        for process in processes:
-            process.start()
-        for process in processes:
-            process.join()
+        if not all([process.get() for process in processes]):
+            self.logger.error(
+                "Cloning process did not complete successfully. Skipping S3 backup."
+            )
+            return
         self.logger.info("Cloning process completed.")
-        self.logger.info("Initiating S3 upload process...")
-        s3_upload = s3.Uploader(self.env, self.logger)
-        s3_upload.trigger()
-        self.logger.info("S3 upload process completed.")
+        if squire.check_file_presence(self.clone_dir):
+            self.logger.info("Initiating S3 upload process...")
+            s3_upload = s3.Uploader(self.env, self.logger)
+            s3_upload.trigger()
+            self.logger.info("S3 upload process completed.")
+        else:
+            self.logger.warning("No files found to upload to S3.")

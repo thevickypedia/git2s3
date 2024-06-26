@@ -7,61 +7,61 @@ from typing import Dict
 
 import yaml
 
-from git2s3.config import EnvConfig, Field, Fields, LogOptions
+from git2s3 import config
 
 
-def env_loader(filename: str | os.PathLike) -> EnvConfig:
+def env_loader(filename: str | os.PathLike) -> config.EnvConfig:
     """Loads environment variables based on filetypes.
 
     Args:
         filename: Filename from where env vars have to be loaded.
 
     Returns:
-        EnvConfig:
+        config.EnvConfig:
         Returns a reference to the ``EnvConfig`` object.
     """
     env_file = pathlib.Path(filename)
     if env_file.suffix.lower() == ".json":
         with open(env_file) as stream:
             env_data = json.load(stream)
-        return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
+        return config.EnvConfig(**{k.lower(): v for k, v in env_data.items()})
     elif env_file.suffix.lower() in (".yaml", ".yml"):
         with open(env_file) as stream:
             env_data = yaml.load(stream, yaml.FullLoader)
-        return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
+        return config.EnvConfig(**{k.lower(): v for k, v in env_data.items()})
     elif not env_file.suffix or env_file.suffix.lower() in (
         ".text",
         ".txt",
         "",
     ):
-        return EnvConfig.from_env_file(env_file)
+        return config.EnvConfig.from_env_file(env_file)
     else:
         raise ValueError(
             "\n\tUnsupported format for 'env_file', can be one of (.json, .yaml, .yml, .txt, .text, or null)"
         )
 
 
-def field_detector(repo: Dict[str, str], env: EnvConfig) -> Field:
-    """Detects the type of field to clone and returns the Field model.
+def source_detector(repo: Dict[str, str], env: config.EnvConfig) -> config.DataStore:
+    """Detects the type of source to clone and returns the DataStore model.
 
     Args:
         repo: Repository information as a dict.
         env: Environment configuration.
 
     Returns:
-        Field:
-        Field model.
+        config.DataStore:
+        DataStore model.
     """
     if repo.get("comments_url") == f"{env.git_api_url}/gists/{repo['id']}/comments":
-        return Field(
-            field=Fields.gist,
+        return config.DataStore(
+            source=config.SourceControl.gist,
             clone_url=repo["git_pull_url"],
             name=repo["id"],
             description=repo["description"],
             private=not repo["public"],
         )
-    return Field(
-        field=Fields.repo,
+    return config.DataStore(
+        source=config.SourceControl.repo,
         clone_url=repo["clone_url"],
         name=repo["name"],
         description=repo["description"],
@@ -69,7 +69,7 @@ def field_detector(repo: Dict[str, str], env: EnvConfig) -> Field:
     )
 
 
-def default_logger(env: EnvConfig) -> logging.Logger:
+def default_logger(env: config.EnvConfig) -> logging.Logger:
     """Generates a default console logger.
 
     Args:
@@ -79,7 +79,7 @@ def default_logger(env: EnvConfig) -> logging.Logger:
         logging.Logger:
         Logger object.
     """
-    if env.log == LogOptions.file:
+    if env.log == config.LogOptions.file:
         if not os.path.isdir("logs"):
             os.mkdir("logs")
         logfile: str = datetime.now().strftime(
@@ -100,3 +100,27 @@ def default_logger(env: EnvConfig) -> logging.Logger:
     )
     logger.addHandler(hdlr=handler)
     return logger
+
+
+def check_file_presence(root: str | os.PathLike) -> bool:
+    """Get a list of all subdirectories and check for file presence.
+
+    Args:
+        root: Root directory to check for file presence.
+
+    Returns:
+        bool:
+        Returns a bool indicating if files are present in the subdirectories.
+    """
+    for subdir in [
+        os.path.join(root, subdir)
+        for subdir in os.listdir(root)
+        if os.path.isdir(os.path.join(root, subdir))
+    ]:
+        if [
+            file
+            for file in os.listdir(subdir)
+            if os.path.isfile(os.path.join(subdir, file))
+        ]:
+            return True
+    return False

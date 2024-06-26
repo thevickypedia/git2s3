@@ -168,3 +168,6 @@ cython_debug/
 !doc_gen/Makefile
 !doc_gen/static.css
 doc_gen/*
+
+# Examples
+!samples/*

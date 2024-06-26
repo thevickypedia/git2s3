@@ -1,5 +1,6 @@
 import pathlib
 import sys
+import time
 from typing import List, Optional
 
 from pydantic import BaseModel, DirectoryPath, HttpUrl, field_validator
@@ -25,10 +26,10 @@ class LogOptions(StrEnum):
     file: str = "file"
 
 
-class Fields(StrEnum):
-    """Available fields to clone.
+class SourceControl(StrEnum):
+    """Available source control options to clone.
 
-    >>> Fields
+    >>> SourceControl
 
     """
 
@@ -38,14 +39,14 @@ class Fields(StrEnum):
     wiki: str = "wiki"
 
 
-class Field(BaseModel):
-    """Field model to store repository/gist information.
+class DataStore(BaseModel):
+    """DataStore model to store repository/gist information.
 
-    >>> Field
+    >>> DataStore
 
     """
 
-    field: Fields
+    source: SourceControl
     clone_url: HttpUrl
     name: str
     description: Optional[str] = None
@@ -75,8 +76,9 @@ class EnvConfig(BaseSettings):
     git_api_url: HttpUrl = "https://api.github.com/"
     git_owner: str
     git_token: str
+    git_ignore: List[str] = []
 
-    fields: Fields | List[Fields] = Fields.all
+    source: SourceControl | List[SourceControl] = SourceControl.all
     log: LogOptions = LogOptions.stdout
     debug: bool = False
 
@@ -85,7 +87,7 @@ class EnvConfig(BaseSettings):
     aws_secret_access_key: str | None = None
     aws_region_name: str | None = None
     aws_bucket_name: str | None = None
-    aws_s3_prefix: str = "github"
+    aws_s3_prefix: str = f"github_{int(time.time())}"
     boto3_retry_attempts: int = 10
     boto3_retry_mode: Boto3RetryMode = Boto3RetryMode.standard
 
@@ -106,21 +108,33 @@ class EnvConfig(BaseSettings):
         """
         return cls(_env_file=filename)
 
-    @field_validator("fields", mode="after", check_fields=True)
-    def parse_fields(cls, value: Fields | List[Fields]) -> DirectoryPath:
-        """Validate and parse 'fields' to remove 'all' from the fields option."""
+    @field_validator("source", mode="after", check_fields=True)
+    def parse_source(cls, value: SourceControl | List[SourceControl]) -> DirectoryPath:
+        """Validate and parse 'source' to remove 'all' from the source option."""
         if isinstance(value, list):
-            if value == [Fields.all] or Fields.all in value:
-                return [Fields.repo, Fields.gist, Fields.wiki]
+            if value == [SourceControl.all] or SourceControl.all in value:
+                return [SourceControl.repo, SourceControl.gist, SourceControl.wiki]
+            if SourceControl.repo not in value:
+                raise ValueError(
+                    f"{value!r} must contain {SourceControl.repo.value!r} as a source type"
+                )
             return value
-        if value == Fields.all:
-            return [Fields.repo, Fields.gist, Fields.wiki]
-        raise ValueError(f"{value!r} is not a valid field type")
+        if value == SourceControl.all:
+            return [SourceControl.repo, SourceControl.gist, SourceControl.wiki]
+        value = [value]
+        if SourceControl.repo in value:
+            return value
+        raise ValueError(f"Must contain {SourceControl.repo.value!r} as a source type")
 
     @field_validator("git_api_url", mode="after", check_fields=True)
     def parse_git_api_url(cls, value: HttpUrl) -> str:
         """Parse git_api_url stripping the ``/`` at the end."""
         return str(value).rstrip("/")
+
+    @field_validator("git_ignore", mode="after", check_fields=True)
+    def parse_git_ignore(cls, value: List[str]) -> List[str]:
+        """Convert all git_ignore values to lowercase."""
+        return [v.lower() for v in value]
 
     class Config:
         """Environment variables configuration."""

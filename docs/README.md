@@ -51,31 +51,16 @@ git2s3 start
 <details>
 <summary><strong>Sourcing environment variables from an env file</strong></summary>
 
-Environment variables can be sourced using any `plaintext` / `JSON` / `YAML` file.
-The filepath should be provided as an argument during object instantiation.
-
-> _By default, `Git2S3` will look for a `.env` file in the current working directory._
-
-**Examples**
-
-- **CLI**
-```shell
-git2s3 start --env-file "/path/to/env/file"
-```
-
-- **IDE**
-```python
-import git2s3
-backup = git2s3.Git2S3(env_file='/path/to/env/file')
-backup.start()
-```
+> _By default, `Git2S3` will look for a `.env` file in the current working directory._<br>
+> Refer [samples] directory for examples.
 
 </details>
 
 - **GIT_API_URL** - GitHub API endpoint. Defaults to `https://api.github.com/`
 - **GIT_OWNER** - GitHub profile owner or organization name.
 - **GIT_TOKEN** - GitHub token to get ALL repos (including private).
-- **FIELDS** - Fields options to restore. Defaults to all.
+- **GIT_IGNORE** - List of repositories/gists to ignore. Defaults to `[]`
+- **SOURCE** - Source options `[repo, gist, wiki]` to back up. Defaults to all.
 - **LOG** - Log options to log to a ``file`` or ``stdout``. _Does not apply when custom logger is used_
 - **DEBUG** - Boolean flag to enable debug level logging. _Does not apply when custom logger is used_
 - **AWS_PROFILE_NAME** - AWS profile name. Uses the CLI config value ``AWS_DEFAULT_PROFILE`` by default.
@@ -162,3 +147,4 @@ Licensed under the [MIT License][license]
 [license]: https://github.com/thevickypedia/git2s3/blob/master/LICENSE
 [runbook]: https://thevickypedia.github.io/git2s3/
 [Boto3 retry configuration]: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html#available-retry-modes
+[samples]: https://github.com/thevickypedia/git2s3/tree/main/samples
