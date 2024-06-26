@@ -16,6 +16,10 @@ Git2S3 - Main
 =============
 .. automodule:: git2s3.main
 
+S3
+==
+.. automodule:: git2s3.s3
+
 Squire
 ======
 .. automodule:: git2s3.squire

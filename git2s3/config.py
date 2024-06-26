@@ -52,6 +52,18 @@ class Field(BaseModel):
     private: bool
 
 
+class Boto3RetryMode(StrEnum):
+    """Retry mode for boto3 client.
+
+    >>> Boto3RetryMode
+
+    """
+
+    legacy: str = "legacy"
+    standard: str = "standard"
+    adaptive: str = "adaptive"
+
+
 # noinspection PyMethodParameters
 class EnvConfig(BaseSettings):
     """Configure all env vars and validate using ``pydantic``.
@@ -73,6 +85,9 @@ class EnvConfig(BaseSettings):
     aws_secret_access_key: str | None = None
     aws_region_name: str | None = None
     aws_bucket_name: str | None = None
+    aws_s3_prefix: str = "github"
+    boto3_retry_attempts: int = 10
+    boto3_retry_mode: Boto3RetryMode = Boto3RetryMode.standard
 
     @classmethod
     def from_env_file(cls, filename: pathlib.Path) -> "EnvConfig":

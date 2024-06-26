@@ -119,6 +119,9 @@ The filepath should be provided as an argument during object instantiation.</p>
 <li><p><strong>AWS_SECRET_ACCESS_KEY</strong> - AWS secret key. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_SECRET_ACCESS_KEY</span></code> by default.</p></li>
 <li><p><strong>AWS_REGION_NAME</strong> - S3 bucket’s region. Uses the CLI config value <code class="docutils literal notranslate"><span class="pre">AWS_DEFAULT_REGION</span></code> by default.</p></li>
 <li><p><strong>AWS_BUCKET_NAME</strong> - AWS bucket name to store the backups.</p></li>
+<li><p><strong>AWS_S3_PREFIX</strong> - S3 prefix <em>(folder like)</em> for the backup. Defaults to <code class="docutils literal notranslate"><span class="pre">github</span></code></p></li>
+<li><p><strong>BOTO3_RETRY_ATTEMPTS</strong> - Number of retries for Boto3 client config. Defaults to <code class="docutils literal notranslate"><span class="pre">10</span></code></p></li>
+<li><p><strong>BOTO3_RETRY_MODE</strong> - <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html#available-retry-modes">Boto3 retry configuration</a> for S3 client. Defaults to <code class="docutils literal notranslate"><span class="pre">standard</span></code></p></li>
 </ul>
 </section>
 <section id="coding-standards">

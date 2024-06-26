@@ -13,11 +13,11 @@ import git
 import requests
 from git.exc import GitCommandError
 
-from git2s3 import config, squire
+from git2s3 import config, s3, squire
 
 
-# noinspection PyUnresolvedReferences
 class Git2S3:
+    # noinspection PyUnresolvedReferences
     """Instantiates Git2S3 object to clone all repos/wiki/gists from GitHub and upload to S3.
 
     >>> Git2S3
@@ -263,3 +263,7 @@ class Git2S3:
         for process in processes:
             process.join()
         self.logger.info("Cloning process completed.")
+        self.logger.info("Initiating S3 upload process...")
+        s3_upload = s3.Uploader(self.env, self.logger)
+        s3_upload.trigger()
+        self.logger.info("S3 upload process completed.")
