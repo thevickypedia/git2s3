@@ -1,10 +1,16 @@
 Release Notes
 =============
 
-v1.0.0 (09/16/2022)
+v0.0.1 (06/27/2024)
 -------------------
-- refactor: change formatting command
+- Release `v0.0.1`
+- **Full Changelog**: https://github.com/thevickypedia/git2s3/compare/ba49b99...c83b01c
 
-v1.1.6 (08/25/2022)
--------------------
-- ci: fix top-issues-action syntax
+v0.0.0-b (06/26/2024)
+---------------------
+- Release beta version
+
+v0.0.0-a (06/25/2024)
+---------------------
+- Pre-alpha release to pypi
+- Includes cloning of all repositories

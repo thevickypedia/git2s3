@@ -24,6 +24,9 @@ packages = ["git2s3"]
 version = {attr = "git2s3.version"}
 dependencies = { file = ["requirements.txt"] }
 
+[project.optional-dependencies]
+dev = ["sphinx==5.1.1", "pre-commit", "recommonmark", "gitverse"]
+
 [project.scripts]
 # sends all the args to commandline function, where the arbitary commands as processed accordingly
 git2s3 = "git2s3:commandline"
