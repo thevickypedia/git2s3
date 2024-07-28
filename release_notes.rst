@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+0.0.2 (07/28/2024)
+------------------
+- Create a backup approach for `GitPython`
+- Make `aws_bucket_name` mandatory
+- Remove empty repositories when cloning wiki fails
+- Bump version to 0.0.2
+
 v0.0.1 (06/27/2024)
 -------------------
 - Release `v0.0.1`
