@@ -86,7 +86,7 @@ class EnvConfig(BaseSettings):
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
     aws_region_name: str | None = None
-    aws_bucket_name: str | None = None
+    aws_bucket_name: str
     aws_s3_prefix: str = f"github_{int(time.time())}"
     boto3_retry_attempts: int = 10
     boto3_retry_mode: Boto3RetryMode = Boto3RetryMode.standard

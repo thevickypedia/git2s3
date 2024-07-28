@@ -2,12 +2,28 @@ import json
 import logging
 import os
 import pathlib
+import shutil
 from datetime import datetime
 from typing import Dict
 
 import yaml
 
 from git2s3 import config
+
+
+def archer(destination: str) -> None:
+    """Archives a given directory and deletes it while retaining the zipfile.
+
+    Args:
+        destination: Directory path to be archived.
+
+    Raises:
+        AssertionError:
+        If zipfile is not present after archiving.
+    """
+    shutil.make_archive(destination, "zip", destination)
+    assert os.path.isfile(f"{destination}.zip")
+    shutil.rmtree(destination)
 
 
 def env_loader(filename: str | os.PathLike) -> config.EnvConfig:

@@ -1,7 +1,7 @@
 import logging
 import os
-import secrets
 import shutil
+import subprocess
 import threading
 import warnings
 from collections.abc import Generator
@@ -12,7 +12,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 import git
 import requests
-from git.exc import GitCommandError
+from git.exc import GitCommandError, InvalidGitRepositoryError
 from pydantic import HttpUrl
 
 from git2s3 import config, exc, s3, squire
@@ -48,8 +48,14 @@ class Git2S3:
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        self.repo = git.Repo()
-        self.origin = self.repo.remote()
+        try:
+            self.repo = git.Repo()
+            self.origin = self.repo.remote()
+        except (InvalidGitRepositoryError, ValueError):
+            self.logger.warning("Unable to use git python, switching to git cli")
+            self.cli("command -v git")  # Make sure git cli works
+            self.repo = None
+            self.origin = None
         self.clone_dir = os.path.join(os.getcwd(), self.env.git_owner)
         warnings.simplefilter("always", exc.DirectoryExists)
         warnings.simplefilter("always", exc.UnsupportedSource)
@@ -63,7 +69,8 @@ class Git2S3:
         if profile == "orgs":
             if config.SourceControl.gist in self.env.source:
                 warnings.warn(
-                    f"Gists are not supported for organizations. Removing {config.SourceControl.gist!r} from source.",
+                    "Gists are not supported for organization profiles. "
+                    f"Removing {config.SourceControl.gist.name!r} from source.",
                     exc.UnsupportedSource,
                 )
                 self.env.source.remove(config.SourceControl.gist)
@@ -95,6 +102,35 @@ class Git2S3:
         raise exc.InvalidOwner(
             f"Failed to get the profile type for {self.env.git_owner}. Please check the owner/organization name."
         )
+
+    def cli(self, cmd: str, fail: bool = True) -> int:
+        """Runs CLI commands.
+
+        Args:
+            cmd: Command to run.
+            fail: Boolean flag to fail on errors.
+
+        Returns:
+            int:
+            Return code after running the command.
+        """
+        redacted = cmd.replace(self.env.git_token, "****")
+        try:
+            ret_code = subprocess.check_call(
+                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, shell=True
+            )
+        except subprocess.CalledProcessError as error:
+            ret_code = error.returncode
+            if fail:
+                if error.output:
+                    self.logger.error(error.output)
+                else:
+                    self.logger.error("Failed to run %s", redacted)
+        if fail:
+            assert (
+                ret_code == 0
+            ), f"{redacted!r} - returned a non-zero exit code: {ret_code}"
+        return ret_code
 
     def get_all(self, source: config.SourceControl) -> Generator[Dict[str, str]]:
         """Iterate through a target owner/organization to get all available repositories/gists.
@@ -142,7 +178,7 @@ class Git2S3:
                 self.logger.debug("No repos found in page: %d, ending loop.", idx)
                 break
 
-    def set_pat(self, url: str | HttpUrl) -> None:
+    def set_pat(self, url: str | HttpUrl) -> str | HttpUrl | None:
         """Creates an authenticated URL by updating the netloc, and sets that as the origin URL.
 
         Args:
@@ -164,8 +200,10 @@ class Git2S3:
                 url_split.fragment,
             )
         )
-        self.origin.config_writer.set("url", joined)
-        self.origin.config_writer.release()
+        if self.repo and self.origin:
+            self.origin.config_writer.set("url", joined)
+            self.origin.config_writer.release()
+        return joined
 
     def clone_wiki(self, datastore: config.DataStore) -> None:
         """Clone all the wikis from the repository.
@@ -188,9 +226,25 @@ class Git2S3:
             )
         if not os.path.isdir(wiki_dest):
             os.makedirs(wiki_dest)
+        wiki_url = self.set_pat(wiki_url)
         try:
-            self.set_pat(wiki_url)
-            self.repo.clone_from(wiki_url, wiki_dest)
+            if self.repo and self.origin:
+                self.repo.clone_from(wiki_url, wiki_dest)
+            else:
+                output = self.cli(f"cd {wiki_dest} && git clone {wiki_url}", fail=False)
+                if output == 0:
+                    try:
+                        squire.archer(wiki_dest)
+                    except AssertionError:
+                        self.logger.error(
+                            "Failed to create a zip file for %s", datastore.name
+                        )
+                        raise exc.ArchiveError(
+                            f"Failed to create a zip file for {datastore.name!r}"
+                        )
+                else:
+                    # Skip if cloning failed, as wiki pages are not guaranteed to exist
+                    shutil.rmtree(wiki_dest)
         except GitCommandError as error:
             msg = error.stderr or error.stdout or ""
             msg = msg.strip().replace("\n", "").replace("'", "").replace('"', "")
@@ -230,24 +284,24 @@ class Git2S3:
             ).start()
         if not os.path.isdir(repo_dest):
             os.makedirs(repo_dest)
+        datastore.clone_url = self.set_pat(datastore.clone_url)
         try:
-            self.set_pat(datastore.clone_url)
-            self.repo.clone_from(datastore.clone_url, repo_dest)
+            if self.repo and self.origin:
+                self.repo.clone_from(datastore.clone_url, repo_dest)
+            else:
+                self.cli(f"cd {repo_dest} && git clone {datastore.clone_url}")
             try:
                 if datastore.description:
-                    desc_file = os.path.join(
-                        repo_dest, f"description_{secrets.token_hex(2)}.txt"
-                    )
+                    desc_file = os.path.join(repo_dest, "description_git2s3.txt")
                     with open(desc_file, "w") as desc:
                         desc.write(datastore.description)
                         desc.flush()
             except Exception as warning:
                 # Adding description file is only an added feature, so no need to fail
                 self.logger.warning(warning)
-            shutil.make_archive(repo_dest, "zip", repo_dest)
-            if os.path.isfile(f"{repo_dest}.zip"):
-                shutil.rmtree(repo_dest)
-            else:
+            try:
+                squire.archer(repo_dest)
+            except AssertionError:
                 self.logger.error("Failed to create a zip file for %s", datastore.name)
                 raise exc.ArchiveError(
                     f"Failed to create a zip file for {datastore.name!r}"
