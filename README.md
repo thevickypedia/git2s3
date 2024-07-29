@@ -61,12 +61,13 @@ git2s3 start
 - **GIT_TOKEN** - GitHub token to get ALL repos (including private).
 - **GIT_IGNORE** - List of repositories/gists to ignore. Defaults to `[]`
 - **SOURCE** - Source options `[repo, gist, wiki]` to back up. Defaults to all.
-- **LOG** - Log options to log to a ``file`` or ``stdout``. _Does not apply when custom logger is used_
+- **LOG** - Log options to log to a `file` or `stdout`. _Does not apply when custom logger is used_
 - **DEBUG** - Boolean flag to enable debug level logging. _Does not apply when custom logger is used_
-- **AWS_PROFILE_NAME** - AWS profile name. Uses the CLI config value ``AWS_DEFAULT_PROFILE`` by default.
-- **AWS_ACCESS_KEY_ID** - AWS access key ID. Uses the CLI config value ``AWS_ACCESS_KEY_ID`` by default.
-- **AWS_SECRET_ACCESS_KEY** - AWS secret key. Uses the CLI config value ``AWS_SECRET_ACCESS_KEY`` by default.
-- **AWS_REGION_NAME** - S3 bucket's region. Uses the CLI config value ``AWS_DEFAULT_REGION`` by default.
+- **STORE_LOCAL** - Boolean flag to store the backup locally. Defaults to `False`
+- **AWS_PROFILE_NAME** - AWS profile name. Uses the CLI config value `AWS_DEFAULT_PROFILE` by default.
+- **AWS_ACCESS_KEY_ID** - AWS access key ID. Uses the CLI config value `AWS_ACCESS_KEY_ID` by default.
+- **AWS_SECRET_ACCESS_KEY** - AWS secret key. Uses the CLI config value `AWS_SECRET_ACCESS_KEY` by default.
+- **AWS_REGION_NAME** - S3 bucket's region. Uses the CLI config value `AWS_DEFAULT_REGION` by default.
 - **AWS_BUCKET_NAME** - AWS bucket name to store the backups.
 - **AWS_S3_PREFIX** - S3 prefix _(folder like)_ for the backup. Defaults to `github`
 - **BOTO3_RETRY_ATTEMPTS** - Number of retries for Boto3 client config. Defaults to `10`

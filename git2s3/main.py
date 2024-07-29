@@ -217,12 +217,17 @@ class Git2S3:
         if datastore.private:
             wiki_dest = str(
                 os.path.join(
-                    self.clone_dir, datastore.source, "private", datastore.name
+                    self.clone_dir,
+                    datastore.source,
+                    "private",
+                    f"{datastore.name}.wiki",
                 )
             )
         else:
             wiki_dest = str(
-                os.path.join(self.clone_dir, datastore.source, "public", datastore.name)
+                os.path.join(
+                    self.clone_dir, datastore.source, "public", f"{datastore.name}.wiki"
+                )
             )
         if not os.path.isdir(wiki_dest):
             os.makedirs(wiki_dest)
@@ -376,7 +381,12 @@ class Git2S3:
         if squire.check_file_presence(self.clone_dir):
             self.logger.info("Initiating S3 upload process...")
             s3_upload = s3.Uploader(self.env, self.logger)
-            s3_upload.trigger()
-            self.logger.info("S3 upload process completed.")
+            if s3_upload.trigger():
+                self.logger.error("Some objects failed to upload.")
+            else:
+                self.logger.info("S3 upload process completed.")
+                if not self.env.local_store:
+                    self.logger.info("Deleting local copy!")
+                    shutil.rmtree(self.clone_dir)
         else:
             self.logger.warning("No files found for S3 upload process.")

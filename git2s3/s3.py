@@ -61,8 +61,13 @@ class Uploader:
         except (FileNotFoundError, BotoCoreError, ClientError) as error:
             raise exc.UploadError(error)
 
-    def trigger(self) -> None:
-        """Trigger to upload all file objects concurrently to S3."""
+    def trigger(self) -> bool:
+        """Trigger to upload all file objects concurrently to S3.
+
+        Returns:
+            bool:
+            Returns a boolean flag to indicate completion status.
+        """
         futures = {}
         with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
             for root, dirs, files in os.walk(self.base_path):
@@ -74,10 +79,13 @@ class Uploader:
                         self.upload_file, local_file_path, s3_file_path
                     )
                     futures[future] = s3_file_path
+        exception = False
         for future in as_completed(futures):
             if future.exception():
+                exception = True
                 self.logger.error(
                     "Thread processing '%s' received an exception: %s",
                     futures[future],
                     future.exception(),
                 )
+        return exception

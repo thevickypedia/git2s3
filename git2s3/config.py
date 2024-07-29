@@ -81,6 +81,7 @@ class EnvConfig(BaseSettings):
     source: SourceControl | List[SourceControl] = SourceControl.all
     log: LogOptions = LogOptions.stdout
     debug: bool = False
+    local_store: bool = False
 
     aws_profile_name: str | None = None
     aws_access_key_id: str | None = None
