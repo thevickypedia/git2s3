@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v0.0.4 (08/01/2024)
+-------------------
+- Release ``v0.0.4``
+- **Full Changelog**: https://github.com/thevickypedia/git2s3/compare/0.0.3...v0.0.4
+
+v0.0.3 (07/28/2024)
+-------------------
+- Release ``v0.0.3``
+- **Full Changelog**: https://github.com/thevickypedia/git2s3/compare/0.0.2...v0.0.3
+
 0.0.2 (07/28/2024)
 ------------------
 - Create a backup approach for `GitPython`

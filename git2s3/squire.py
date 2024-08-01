@@ -99,7 +99,7 @@ def default_logger(env: config.EnvConfig) -> logging.Logger:
         if not os.path.isdir("logs"):
             os.mkdir("logs")
         logfile: str = datetime.now().strftime(
-            os.path.join("logs", "pyfilebrowser_%d-%m-%Y.log")
+            os.path.join("logs", "git2s3_%d-%m-%Y.log")
         )
         handler = logging.FileHandler(filename=logfile)
     else:

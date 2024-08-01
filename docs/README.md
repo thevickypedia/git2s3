@@ -71,7 +71,7 @@ git2s3 start
 - **AWS_BUCKET_NAME** - AWS bucket name to store the backups.
 - **AWS_S3_PREFIX** - S3 prefix _(folder like)_ for the backup. Defaults to `github`
 - **BOTO3_RETRY_ATTEMPTS** - Number of retries for Boto3 client config. Defaults to `10`
-- **BOTO3_RETRY_MODE** - [Boto3 retry configuration] for S3 client. Defaults to `standard`
+- **BOTO3_RETRY_MODE** - [Boto3 retry configuration][boto3-retry-config] for S3 client. Defaults to `standard`
 
 ## Coding Standards
 Docstring format: [`Google`][google-docs] <br>
@@ -147,5 +147,5 @@ Licensed under the [MIT License][license]
 [pypi-repo]: https://packaging.python.org/tutorials/packaging-projects/
 [license]: https://github.com/thevickypedia/git2s3/blob/master/LICENSE
 [runbook]: https://thevickypedia.github.io/git2s3/
-[Boto3 retry configuration]: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html#available-retry-modes
+[boto3-retry-config]: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html#available-retry-modes
 [samples]: https://github.com/thevickypedia/git2s3/tree/main/samples

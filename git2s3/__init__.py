@@ -6,7 +6,7 @@ import click
 
 from git2s3.main import Git2S3
 
-version = "0.0.3"
+version = "0.0.4"
 
 
 @click.command()
