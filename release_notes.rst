@@ -1,12 +1,18 @@
 Release Notes
 =============
 
+v0.0.5 (11/03/2024)
+-------------------
+- Includes an option to upload to S3 even when cloning partially failed
+- Includes detailed logging of success and failed count for clones and uploads
+- **Full Changelog**: https://github.com/thevickypedia/git2s3/compare/0.0.4...v0.0.5
+
 v0.0.4 (08/01/2024)
 -------------------
 - Release ``v0.0.4``
 - **Full Changelog**: https://github.com/thevickypedia/git2s3/compare/0.0.3...v0.0.4
 
-v0.0.3 (07/28/2024)
+v0.0.3 (07/29/2024)
 -------------------
 - Release ``v0.0.3``
 - **Full Changelog**: https://github.com/thevickypedia/git2s3/compare/0.0.2...v0.0.3
