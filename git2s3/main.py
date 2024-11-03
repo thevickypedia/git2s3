@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import shutil
@@ -75,6 +76,8 @@ class Git2S3:
                 )
                 self.env.source.remove(config.SourceControl.gist)
         self.base_url = f"{self.env.git_api_url}/{profile}/{self.env.git_owner}"
+        metrics = {"total": 0, "success": 0, "failed": 0}
+        self.clones = {x.value: metrics for x in self.env.source if x.value != "wiki"}
 
     def profile_type(self) -> str:
         """Get the profile type.
@@ -103,7 +106,7 @@ class Git2S3:
             f"Failed to get the profile type for {self.env.git_owner}. Please check the owner/organization name."
         )
 
-    def cli(self, cmd: str, fail: bool = True) -> int:
+    def cli(self, cmd: str, fail: bool = True, retry: bool = False) -> int:
         """Runs CLI commands.
 
         Args:
@@ -126,10 +129,14 @@ class Git2S3:
                     self.logger.error(error.output)
                 else:
                     self.logger.error("Failed to run %s", redacted)
-        if fail:
-            assert (
-                ret_code == 0
-            ), f"{redacted!r} - returned a non-zero exit code: {ret_code}"
+        if ret_code != 0:
+            if retry:
+                self.logger.warning("Retrying the command: %s", redacted)
+                return self.cli(cmd, fail, False)
+            if fail:
+                raise AssertionError(
+                    f"{redacted!r} - returned a non-zero exit code: {ret_code}"
+                )
         return ret_code
 
     def get_all(self, source: config.SourceControl) -> Generator[Dict[str, str]]:
@@ -211,14 +218,14 @@ class Git2S3:
         Args:
             datastore: DataStore model to store repository/gist information.
         """
-        datastore.source = config.SourceControl.wiki.value
+        datastore.source = config.SourceControl.wiki
         self.logger.debug("Cloning wiki for %s", datastore.name)
         wiki_url = str(datastore.clone_url).replace(".git", ".wiki.git")
         if datastore.private:
             wiki_dest = str(
                 os.path.join(
                     self.clone_dir,
-                    datastore.source,
+                    datastore.source.value,
                     "private",
                     f"{datastore.name}.wiki",
                 )
@@ -226,7 +233,10 @@ class Git2S3:
         else:
             wiki_dest = str(
                 os.path.join(
-                    self.clone_dir, datastore.source, "public", f"{datastore.name}.wiki"
+                    self.clone_dir,
+                    datastore.source.value,
+                    "public",
+                    f"{datastore.name}.wiki",
                 )
             )
         if not os.path.isdir(wiki_dest):
@@ -236,6 +246,7 @@ class Git2S3:
             if self.repo and self.origin:
                 self.repo.clone_from(wiki_url, wiki_dest)
             else:
+                # Skip if cloning failed, as wiki pages are not guaranteed to exist
                 output = self.cli(f"cd {wiki_dest} && git clone {wiki_url}", fail=False)
                 if output == 0:
                     try:
@@ -248,7 +259,6 @@ class Git2S3:
                             f"Failed to create a zip file for {datastore.name!r}"
                         )
                 else:
-                    # Skip if cloning failed, as wiki pages are not guaranteed to exist
                     shutil.rmtree(wiki_dest)
         except GitCommandError as error:
             msg = error.stderr or error.stdout or ""
@@ -294,7 +304,9 @@ class Git2S3:
             if self.repo and self.origin:
                 self.repo.clone_from(datastore.clone_url, repo_dest)
             else:
-                self.cli(f"cd {repo_dest} && git clone {datastore.clone_url}")
+                self.cli(
+                    f"cd {repo_dest} && git clone {datastore.clone_url}", retry=True
+                )
             try:
                 if datastore.description:
                     desc_file = os.path.join(repo_dest, "description_git2s3.txt")
@@ -343,11 +355,13 @@ class Git2S3:
                 if identifier.lower() in self.env.git_ignore:
                     self.logger.info("Skipping %s: '%s'", source, identifier)
                     continue
+                self.clones[source.value]["total"] += 1
                 future = executor.submit(self.worker, repo)
                 futures[future] = identifier
         return_flag = True
         for future in as_completed(futures):
             if future.exception():
+                self.clones[source.value]["failed"] += 1
                 self.logger.error(
                     "Thread cloning the %s '%s' received an exception: %s",
                     source,
@@ -355,6 +369,8 @@ class Git2S3:
                     future.exception(),
                 )
                 return_flag = False
+            else:
+                self.clones[source.value]["success"] += 1
         return return_flag
 
     def start(self) -> None:
@@ -372,19 +388,30 @@ class Git2S3:
                     self.cloner, args=(config.SourceControl.gist,)
                 )
             )
-        if not all(process.get() for process in processes):
-            self.logger.error(
-                "Cloning process did not complete successfully. Skipping S3 backup."
-            )
-            return
-        self.logger.info("Cloning process completed.")
-        if squire.check_file_presence(self.clone_dir):
-            self.logger.info("Initiating S3 upload process...")
-            s3_upload = s3.Uploader(self.env, self.logger)
-            if s3_upload.trigger():
-                self.logger.error("Some objects failed to upload.")
+        awaiter = all(process.get() for process in processes)
+        self.logger.info("\n%s\n", json.dumps(self.clones, indent=2))
+        if awaiter:
+            self.logger.info("All sources were cloned successfully.")
+        else:
+            if self.env.incomplete_upload:
+                self.logger.error(
+                    "Cloning process did not complete successfully. Skipping S3 backup."
+                )
+                return
             else:
-                self.logger.info("S3 upload process completed.")
+                self.logger.warning(
+                    "Some cloning processes failed. Proceeding with incomplete upload."
+                )
+        self.logger.info("Cloning process completed.")
+        if total := squire.check_file_presence(self.clone_dir):
+            self.logger.info(
+                "Initiating S3 upload process. Total number of files: %d", total
+            )
+            s3_upload = s3.Uploader(self.env, self.logger)
+            if failed := s3_upload.trigger():
+                self.logger.error("%d / %d objects failed to upload.", failed, total)
+            else:
+                self.logger.info("%d objects were uploaded to S3 successfully.", total)
                 if not self.env.local_store:
                     self.logger.info("Deleting local copy!")
                     shutil.rmtree(self.clone_dir)

@@ -118,17 +118,19 @@ def default_logger(env: config.EnvConfig) -> logging.Logger:
     return logger
 
 
-def check_file_presence(source_dir: str | os.PathLike) -> bool:
+def check_file_presence(source_dir: str | os.PathLike) -> int:
     """Get a list of all subdirectories and check for file presence.
 
     Args:
         source_dir: Root directory to check for file presence.
 
     Returns:
-        bool:
-        Returns a bool indicating if files are present in the subdirectories.
+        int:
+        Returns the total number of zip files cloned.
     """
+    total_files = 0
     for root, dirs, files in os.walk(source_dir):
-        if any(file.endswith(".zip") for file in files):
-            return True
-    return False
+        for file in files:
+            if file.endswith(".zip"):
+                total_files += 1
+    return total_files

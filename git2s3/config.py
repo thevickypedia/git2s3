@@ -78,6 +78,7 @@ class EnvConfig(BaseSettings):
     git_token: str
     git_ignore: List[str] = []
 
+    incomplete_upload: bool = False
     source: SourceControl | List[SourceControl] = SourceControl.all
     log: LogOptions = LogOptions.stdout
     debug: bool = False
