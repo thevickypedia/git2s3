@@ -380,7 +380,7 @@ class Git2S3:
                 self.clones[source.value]["total"] += 1
                 future = executor.submit(self.worker, repo)
                 futures[future] = identifier
-        return_flag = True
+        exception = True
         for future in as_completed(futures):
             if future.exception():
                 self.clones[source.value]["failed"] += 1
@@ -390,10 +390,10 @@ class Git2S3:
                     futures[future],
                     future.exception(),
                 )
-                return_flag = False
+                exception = False
             else:
                 self.clones[source.value]["success"] += 1
-        return return_flag
+        return exception
 
     def start(self) -> None:
         """Start the cloning process and upload to S3 once cloning completes successfully."""
@@ -435,6 +435,9 @@ class Git2S3:
             self.logger.info(
                 "Initiating S3 upload process. Total number of files: %d", total
             )
+            if self.env.dry_run:
+                self.logger.info("DRY_RUN set to true, skipping upload to S3")
+                return
             s3_upload = s3.Uploader(self.env, self.logger)
             if failed := s3_upload.trigger():
                 self.logger.error("%d / %d objects failed to upload.", failed, total)

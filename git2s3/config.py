@@ -86,11 +86,12 @@ class EnvConfig(BaseSettings):
     git_ignore: List[str] = []
     max_per_page: PositiveInt = Field(default=100, ge=1, le=100)
 
-    incomplete_upload: bool = False
     source: SourceControl | List[SourceControl] = SourceControl.all
     log: LogOptions = LogOptions.stdout
     debug: bool = False
+    dry_run: bool = False
     local_store: bool = False
+    incomplete_upload: bool = False
 
     aws_bucket_name: str
     aws_profile_name: str | None = None

@@ -60,10 +60,11 @@ git2s3 start
 - **GIT_OWNER** - GitHub profile owner or organization name.
 - **GIT_TOKEN** - GitHub token to get ALL repos (including private).
 - **GIT_IGNORE** - List of repositories/gists to ignore. Defaults to `[]`
-- **MAX_PER_PAGE** - Max number of `repos`/`gists` to pull from a single page through `GET - repos/OWNER/REPO/commits`
-- **SOURCE** - Source options `[repo, gist, wiki]` to back up. Defaults to all.
+- **MAX_PER_PAGE** - Max number of `repos`/`gists` to pull from a single page. Defaults to `100`
+- **SOURCE** - Source options `[repo, gist, wiki]` to back up. Defaults to `all`
 - **LOG** - Log options to log to a `file` or `stdout`. _Does not apply when custom logger is used_
 - **DEBUG** - Boolean flag to enable debug level logging. _Does not apply when custom logger is used_
+- **DRY_RUN** - Boolean flag to skip upload to S3. Defaults to `False`
 - **STORE_LOCAL** - Boolean flag to store the backup locally. Defaults to `False`
 - **INCOMPLETE_UPLOAD** - Boolean flag to upload incomplete cloning. Defaults to `False`
 - **AWS_PROFILE_NAME** - AWS profile name. Uses the CLI config value `AWS_DEFAULT_PROFILE` by default.
