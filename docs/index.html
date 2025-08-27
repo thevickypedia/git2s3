@@ -166,11 +166,11 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="git2s3.main.Git2S3.worker">
-<span class="sig-name descname"><span class="pre">worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.worker" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#git2s3.main.Git2S3.worker" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clones repository/gist/wiki from GitHub.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>repo</strong> – Repository information as JSON payload.</p>
+<dd class="field-odd"><p><strong>source</strong> – Repository/Gist information as JSON payload.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
@@ -305,12 +305,12 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="git2s3.squire.source_detector">
-<span class="sig-prename descclassname"><span class="pre">git2s3.squire.</span></span><span class="sig-name descname"><span class="pre">source_detector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#git2s3.config.EnvConfig" title="git2s3.config.EnvConfig"><span class="pre">EnvConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#git2s3.config.DataStore" title="git2s3.config.DataStore"><span class="pre">DataStore</span></a></span></span><a class="headerlink" href="#git2s3.squire.source_detector" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">git2s3.squire.</span></span><span class="sig-name descname"><span class="pre">source_detector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#git2s3.config.EnvConfig" title="git2s3.config.EnvConfig"><span class="pre">EnvConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#git2s3.config.DataStore" title="git2s3.config.DataStore"><span class="pre">DataStore</span></a></span></span><a class="headerlink" href="#git2s3.squire.source_detector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Detects the type of source to clone and returns the DataStore model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>repo</strong> – Repository information as a dict.</p></li>
+<li><p><strong>source</strong> – Repository/Gist information as a dict.</p></li>
 <li><p><strong>env</strong> – Environment configuration.</p></li>
 </ul>
 </dd>

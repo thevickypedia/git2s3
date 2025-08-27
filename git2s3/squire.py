@@ -57,31 +57,31 @@ def env_loader(filename: str | os.PathLike) -> config.EnvConfig:
         )
 
 
-def source_detector(repo: Dict[str, Any], env: config.EnvConfig) -> config.DataStore:
+def source_detector(source: Dict[str, Any], env: config.EnvConfig) -> config.DataStore:
     """Detects the type of source to clone and returns the DataStore model.
 
     Args:
-        repo: Repository information as a dict.
+        source: Repository/Gist information as a dict.
         env: Environment configuration.
 
     Returns:
         config.DataStore:
         DataStore model.
     """
-    if repo.get("comments_url") == f"{env.git_api_url}/gists/{repo['id']}/comments":
+    if source.get("comments_url") == f"{env.git_api_url}/gists/{source['id']}/comments":
         return config.DataStore(
             source=config.SourceControl.gist,
-            clone_url=repo["git_pull_url"],
-            name=repo["id"],
-            description=repo["description"],
-            private=not repo["public"],
+            clone_url=source["git_pull_url"],
+            name=source["id"],
+            description=source["description"],
+            private=not source["public"],
         )
     return config.DataStore(
         source=config.SourceControl.repo,
-        clone_url=repo["clone_url"],
-        name=repo["name"],
-        description=repo["description"],
-        private=repo["private"],
+        clone_url=source["clone_url"],
+        name=source["name"],
+        description=source["description"],
+        private=source["private"],
     )
 
 

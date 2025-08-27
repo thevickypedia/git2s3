@@ -165,6 +165,7 @@ class Git2S3:
                 f"Invalid field type. Please choose from {config.SourceControl.repo!r} or {config.SourceControl.gist!r}"
             )
         idx = 1
+        total = 0
         while True:
             self.logger.debug("Fetching repos from page %d", idx)
             try:
@@ -185,12 +186,15 @@ class Git2S3:
                 self.logger.debug(
                     "Repositories in page %d: %d", idx, len(json_response)
                 )
+                total += len(json_response)
                 # Yields dictionary from a list
                 yield from json_response
                 idx += 1
             else:
                 self.logger.debug("No repos found in page: %d, ending loop.", idx)
                 break
+        msg = f"Total {source.value}s cloned: {total}"
+        self.logger.info(msg)
 
     def set_pat(self, url: str | HttpUrl) -> str | HttpUrl | None:
         """Creates an authenticated URL by updating the netloc, and sets that as the origin URL.
@@ -273,50 +277,50 @@ class Git2S3:
             self.logger.debug(msg)
             shutil.rmtree(wiki_dest)
 
-    def worker(self, repo: Dict[str, str]) -> None:
+    def worker(self, source: Dict[str, str]) -> None:
         """Clones repository/gist/wiki from GitHub.
 
         Args:
-            repo: Repository information as JSON payload.
+            source: Repository/Gist information as JSON payload.
 
         Raises:
             Exception:
             If the thread fails to clone the repository.
         """
-        datastore = squire.source_detector(repo, self.env)
+        datastore = squire.source_detector(source, self.env)
         self.logger.info("Cloning %s: %s", datastore.source, datastore.name)
         if datastore.private:
-            repo_dest = str(
+            destination = str(
                 os.path.join(
                     self.clone_dir, datastore.source.value, "private", datastore.name
                 )
             )
         else:
-            repo_dest = str(
+            destination = str(
                 os.path.join(
                     self.clone_dir, datastore.source.value, "public", datastore.name
                 )
             )
         # only repos have this field anyway
-        if config.SourceControl.wiki in self.env.source and repo.get("has_wiki"):
+        if config.SourceControl.wiki in self.env.source and source.get("has_wiki"):
             # run as daemon and don't care about the output for wiki
             # 'has_wiki' flag will always be true even if there are no files to clone
             threading.Thread(
                 target=self.clone_wiki, args=(datastore,), daemon=True
             ).start()
-        if not os.path.isdir(repo_dest):
-            os.makedirs(repo_dest)
+        if not os.path.isdir(destination):
+            os.makedirs(destination)
         datastore.clone_url = self.set_pat(datastore.clone_url)
         try:
             if self.repo and self.origin:
-                self.repo.clone_from(datastore.clone_url, repo_dest)
+                self.repo.clone_from(datastore.clone_url, destination)
             else:
                 self.cli(
-                    f"cd {repo_dest} && git clone {datastore.clone_url}", retry=True
+                    f"cd {destination} && git clone {datastore.clone_url}", retry=True
                 )
             try:
                 if datastore.description:
-                    desc_file = os.path.join(repo_dest, "description_git2s3.txt")
+                    desc_file = os.path.join(destination, "description_git2s3.txt")
                     with open(desc_file, "w") as desc:
                         desc.write(datastore.description)
                         desc.flush()
@@ -324,7 +328,7 @@ class Git2S3:
                 # Adding description file is only an added feature, so no need to fail
                 self.logger.warning(warning)
             try:
-                squire.archer(repo_dest)
+                squire.archer(destination)
             except AssertionError:
                 self.logger.error("Failed to create a zip file for %s", datastore.name)
                 raise exc.ArchiveError(
@@ -357,8 +361,8 @@ class Git2S3:
         """
         futures = {}
         with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
-            for repo in self.get_all(source):
-                identifier = repo.get("name") or repo.get("id")
+            for src in self.get_all(source):
+                identifier = src.get("name") or src.get("id")
                 if identifier.lower() in self.env.git_ignore:
                     self.logger.info(
                         "Skipping %s: '%s', reason: git_ignore", source, identifier
@@ -367,18 +371,18 @@ class Git2S3:
                 # pushed_at - works only for repos
                 # updated_at - works for both repos and gists but includes updates like PRs, issues, metadata etc
                 if self.env.cut_off_days and squire.is_older_than_n_days(
-                    timestamp_str=repo.get("pushed_at") or repo.get("updated_at"),
+                    timestamp_str=src.get("pushed_at") or src.get("updated_at"),
                     n_days=self.env.cut_off_days,
                 ):
                     self.logger.info(
                         "Skipping %s: '%s', reason: updated within last [%d days]",
                         source,
                         identifier,
-                        self.env.last_updated,
+                        self.env.cut_off_days,
                     )
                     continue
                 self.clones[source.value]["total"] += 1
-                future = executor.submit(self.worker, repo)
+                future = executor.submit(self.worker, src)
                 futures[future] = identifier
         exception = True
         for future in as_completed(futures):
@@ -399,11 +403,14 @@ class Git2S3:
         """Start the cloning process and upload to S3 once cloning completes successfully."""
         if self.env.cut_off_days:
             self.logger.info(
-                "Starting cloning process for repos that were updated in the last %d day(s)",
+                "Starting cloning process for repos that were updated in the last %d day(s), dry run: %s",
                 self.env.cut_off_days,
+                str(self.env.dry_run).lower(),
             )
         else:
-            self.logger.info("Starting cloning process...")
+            self.logger.info(
+                "Starting cloning process, dry run: %s", str(self.env.dry_run).lower()
+            )
         # Both processes run concurrently, calling the same function with different arguments
         processes = [
             ThreadPool(processes=1).apply_async(
