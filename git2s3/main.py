@@ -49,6 +49,14 @@ class Git2S3:
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/x-www-form-urlencoded",
         }
+        clone_dir_base = os.getcwd()
+        # Proceeding **will** most likely switch the origin URL and mess up the entire local stack
+        if ".git" in os.listdir(clone_dir_base) and os.path.isdir(
+            os.path.join(clone_dir_base, ".git")
+        ):
+            raise BaseException(
+                "ERROR: Cannot start backup process when the current directory is already a Git repository."
+            )
         try:
             self.repo = git.Repo()
             self.origin = self.repo.remote()
@@ -57,7 +65,7 @@ class Git2S3:
             self.cli("command -v git")  # Make sure git cli works
             self.repo = None
             self.origin = None
-        self.clone_dir = os.path.join(os.getcwd(), self.env.git_owner)
+        self.clone_dir = os.path.join(clone_dir_base, self.env.git_owner)
         warnings.simplefilter("always", exc.DirectoryExists)
         warnings.simplefilter("always", exc.UnsupportedSource)
         if os.path.isdir(self.clone_dir) and os.listdir(self.clone_dir):
@@ -112,6 +120,7 @@ class Git2S3:
         Args:
             cmd: Command to run.
             fail: Boolean flag to fail on errors.
+            retry: Boolean flag to indicate that it's a retry attempt.
 
         Returns:
             int:
@@ -353,7 +362,22 @@ class Git2S3:
             for repo in self.get_all(source):
                 identifier = repo.get("name") or repo.get("id")
                 if identifier.lower() in self.env.git_ignore:
-                    self.logger.info("Skipping %s: '%s'", source, identifier)
+                    self.logger.info(
+                        "Skipping %s: '%s', reason: git_ignore", source, identifier
+                    )
+                    continue
+                # pushed_at - works only for repos
+                # updated_at - works for both repos and gists but includes updates like PRs, issues, metadata etc
+                if self.env.cut_off_days and squire.is_older_than_n_days(
+                    timestamp_str=repo.get("pushed_at") or repo.get("updated_at"),
+                    n_days=self.env.cut_off_days,
+                ):
+                    self.logger.info(
+                        "Skipping %s: '%s', reason: updated within last [%d days]",
+                        source,
+                        identifier,
+                        self.env.last_updated,
+                    )
                     continue
                 self.clones[source.value]["total"] += 1
                 future = executor.submit(self.worker, repo)

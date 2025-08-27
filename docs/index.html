@@ -4,7 +4,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Welcome to Git2S3’s documentation! &#8212; Git2S3  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
@@ -103,6 +103,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>cmd</strong> – Command to run.</p></li>
 <li><p><strong>fail</strong> – Boolean flag to fail on errors.</p></li>
+<li><p><strong>retry</strong> – Boolean flag to indicate that it’s a retry attempt.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -304,7 +305,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="git2s3.squire.source_detector">
-<span class="sig-prename descclassname"><span class="pre">git2s3.squire.</span></span><span class="sig-name descname"><span class="pre">source_detector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#git2s3.config.EnvConfig" title="git2s3.config.EnvConfig"><span class="pre">EnvConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#git2s3.config.DataStore" title="git2s3.config.DataStore"><span class="pre">DataStore</span></a></span></span><a class="headerlink" href="#git2s3.squire.source_detector" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">git2s3.squire.</span></span><span class="sig-name descname"><span class="pre">source_detector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#git2s3.config.EnvConfig" title="git2s3.config.EnvConfig"><span class="pre">EnvConfig</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#git2s3.config.DataStore" title="git2s3.config.DataStore"><span class="pre">DataStore</span></a></span></span><a class="headerlink" href="#git2s3.squire.source_detector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Detects the type of source to clone and returns the DataStore model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -352,6 +353,46 @@
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="git2s3.squire.is_within_last_n_days">
+<span class="sig-prename descclassname"><span class="pre">git2s3.squire.</span></span><span class="sig-name descname"><span class="pre">is_within_last_n_days</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#git2s3.squire.is_within_last_n_days" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if an ISO 8601 timestamp is within the last n days.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp_str</strong> – The ISO 8601 formatted timestamp string (e.g., “2025-08-25T16:42:10Z”).</p></li>
+<li><p><strong>n_days</strong> – Number of days to look back from the current UTC time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the timestamp is within the last <cite>n_days</cite>, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="git2s3.squire.is_older_than_n_days">
+<span class="sig-prename descclassname"><span class="pre">git2s3.squire.</span></span><span class="sig-name descname"><span class="pre">is_older_than_n_days</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_days</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#git2s3.squire.is_older_than_n_days" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if an ISO 8601 timestamp is older than n days.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp_str</strong> – The ISO 8601 formatted timestamp string (e.g., “2025-08-25T16:42:10Z”).</p></li>
+<li><p><strong>n_days</strong> – Number of days to compare against from the current UTC time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the timestamp is older than <cite>n_days</cite>, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
@@ -484,6 +525,11 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="git2s3.config.EnvConfig.boto3_retry_mode">
 <span class="sig-name descname"><span class="pre">boto3_retry_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Boto3RetryMode</span></em><a class="headerlink" href="#git2s3.config.EnvConfig.boto3_retry_mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="git2s3.config.EnvConfig.cut_off_days">
+<span class="sig-name descname"><span class="pre">cut_off_days</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#git2s3.config.EnvConfig.cut_off_days" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

@@ -3,8 +3,8 @@ import logging
 import os
 import pathlib
 import shutil
-from datetime import datetime
-from typing import Dict
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 
 import yaml
 
@@ -57,7 +57,7 @@ def env_loader(filename: str | os.PathLike) -> config.EnvConfig:
         )
 
 
-def source_detector(repo: Dict[str, str], env: config.EnvConfig) -> config.DataStore:
+def source_detector(repo: Dict[str, Any], env: config.EnvConfig) -> config.DataStore:
     """Detects the type of source to clone and returns the DataStore model.
 
     Args:
@@ -134,3 +134,33 @@ def check_file_presence(source_dir: str | os.PathLike) -> int:
             if file.endswith(".zip"):
                 total_files += 1
     return total_files
+
+
+def is_within_last_n_days(timestamp_str: str, n_days: int) -> bool:
+    """Check if an ISO 8601 timestamp is within the last n days.
+
+    Args:
+        timestamp_str: The ISO 8601 formatted timestamp string (e.g., "2025-08-25T16:42:10Z").
+        n_days: Number of days to look back from the current UTC time.
+
+    Returns:
+        bool: True if the timestamp is within the last `n_days`, False otherwise.
+    """
+    timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+    now = datetime.now(timezone.utc)
+    return timestamp >= (now - timedelta(days=n_days))
+
+
+def is_older_than_n_days(timestamp_str: str, n_days: int) -> bool:
+    """Check if an ISO 8601 timestamp is older than n days.
+
+    Args:
+        timestamp_str: The ISO 8601 formatted timestamp string (e.g., "2025-08-25T16:42:10Z").
+        n_days: Number of days to compare against from the current UTC time.
+
+    Returns:
+        bool: True if the timestamp is older than `n_days`, False otherwise.
+    """
+    timestamp = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+    now = datetime.now(timezone.utc)
+    return timestamp < (now - timedelta(days=n_days))

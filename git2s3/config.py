@@ -3,7 +3,7 @@ import sys
 import time
 from typing import List, Optional
 
-from pydantic import BaseModel, DirectoryPath, HttpUrl, field_validator
+from pydantic import BaseModel, DirectoryPath, HttpUrl, PositiveInt, field_validator
 from pydantic_settings import BaseSettings
 
 if sys.version_info.minor > 10:
@@ -93,6 +93,13 @@ class EnvConfig(BaseSettings):
     boto3_retry_attempts: int = 10
     boto3_retry_mode: Boto3RetryMode = Boto3RetryMode.standard
 
+    # Only backup the repos that were "updated"/"pushed to" in the last N days
+    cut_off_days: PositiveInt | None = None
+
+    # TODO: Implement back tracking logic with S3
+    # # Boolean flag to back-trace and upload only the repos that were modified
+    # back_trace: bool = False
+
     @classmethod
     def from_env_file(cls, filename: pathlib.Path) -> "EnvConfig":
         """Create an instance of EnvConfig from environment file.
@@ -108,6 +115,7 @@ class EnvConfig(BaseSettings):
             EnvConfig:
             Loads the ``EnvConfig`` model.
         """
+        # noinspection PyArgumentList
         return cls(_env_file=filename)
 
     @field_validator("source", mode="after", check_fields=True)
