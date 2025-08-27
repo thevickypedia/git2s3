@@ -35,11 +35,8 @@ class Git2S3:
         self,
         env_file: str | os.PathLike = ".env",
         logger: logging.Logger = None,
-        max_per_page: int = 100,
     ):
         """Instantiates Git2S3 object to clone all repos/wiki/gists from GitHub and upload to S3."""
-        assert 1 <= max_per_page <= 100, "'max_per_page' must be between 1 and 100"
-        self.per_page = max_per_page
         self.env = squire.env_loader(env_file)
         self.logger = logger or squire.default_logger(self.env)
         self.session = requests.Session()
@@ -172,7 +169,8 @@ class Git2S3:
             self.logger.debug("Fetching repos from page %d", idx)
             try:
                 response = self.session.get(
-                    url=endpoint, params={"per_page": self.per_page, "page": idx}
+                    url=endpoint,
+                    params={"per_page": self.env.max_per_page, "page": idx},
                 )
                 assert response.ok, response.text
             except (requests.RequestException, AssertionError) as error:

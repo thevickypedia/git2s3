@@ -60,6 +60,7 @@ git2s3 start
 - **GIT_OWNER** - GitHub profile owner or organization name.
 - **GIT_TOKEN** - GitHub token to get ALL repos (including private).
 - **GIT_IGNORE** - List of repositories/gists to ignore. Defaults to `[]`
+- **MAX_PER_PAGE** - Max number of `repos`/`gists` to pull from a single page through `GET - repos/OWNER/REPO/commits`
 - **SOURCE** - Source options `[repo, gist, wiki]` to back up. Defaults to all.
 - **LOG** - Log options to log to a `file` or `stdout`. _Does not apply when custom logger is used_
 - **DEBUG** - Boolean flag to enable debug level logging. _Does not apply when custom logger is used_
@@ -73,6 +74,7 @@ git2s3 start
 - **AWS_S3_PREFIX** - S3 prefix _(folder like)_ for the backup. Defaults to `github`
 - **BOTO3_RETRY_ATTEMPTS** - Number of retries for Boto3 client config. Defaults to `10`
 - **BOTO3_RETRY_MODE** - [Boto3 retry configuration][boto3-retry-config] for S3 client. Defaults to `standard`
+- **CUT_OFF_DAYS** - Cut off threshold to back up only the repos/gists that were "updated"/"pushed to"
 
 ## Coding Standards
 Docstring format: [`Google`][google-docs] <br>

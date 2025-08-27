@@ -96,6 +96,7 @@ Refer <a class="reference external" href="https://github.com/thevickypedia/git2s
 <li><p><strong>GIT_OWNER</strong> - GitHub profile owner or organization name.</p></li>
 <li><p><strong>GIT_TOKEN</strong> - GitHub token to get ALL repos (including private).</p></li>
 <li><p><strong>GIT_IGNORE</strong> - List of repositories/gists to ignore. Defaults to <code class="docutils literal notranslate"><span class="pre">[]</span></code></p></li>
+<li><p><strong>MAX_PER_PAGE</strong> - Max number of <code class="docutils literal notranslate"><span class="pre">repos</span></code>/<code class="docutils literal notranslate"><span class="pre">gists</span></code> to pull from a single page through <code class="docutils literal notranslate"><span class="pre">GET</span> <span class="pre">-</span> <span class="pre">repos/OWNER/REPO/commits</span></code></p></li>
 <li><p><strong>SOURCE</strong> - Source options <code class="docutils literal notranslate"><span class="pre">[repo,</span> <span class="pre">gist,</span> <span class="pre">wiki]</span></code> to back up. Defaults to all.</p></li>
 <li><p><strong>LOG</strong> - Log options to log to a <code class="docutils literal notranslate"><span class="pre">file</span></code> or <code class="docutils literal notranslate"><span class="pre">stdout</span></code>. <em>Does not apply when custom logger is used</em></p></li>
 <li><p><strong>DEBUG</strong> - Boolean flag to enable debug level logging. <em>Does not apply when custom logger is used</em></p></li>
@@ -109,6 +110,7 @@ Refer <a class="reference external" href="https://github.com/thevickypedia/git2s
 <li><p><strong>AWS_S3_PREFIX</strong> - S3 prefix <em>(folder like)</em> for the backup. Defaults to <code class="docutils literal notranslate"><span class="pre">github</span></code></p></li>
 <li><p><strong>BOTO3_RETRY_ATTEMPTS</strong> - Number of retries for Boto3 client config. Defaults to <code class="docutils literal notranslate"><span class="pre">10</span></code></p></li>
 <li><p><strong>BOTO3_RETRY_MODE</strong> - <a class="reference external" href="https://boto3.amazonaws.com/v1/documentation/api/latest/guide/retries.html#available-retry-modes">Boto3 retry configuration</a> for S3 client. Defaults to <code class="docutils literal notranslate"><span class="pre">standard</span></code></p></li>
+<li><p><strong>CUT_OFF_DAYS</strong> - Cut off threshold to back up only the repos/gists that were “updated”/”pushed to”</p></li>
 </ul>
 </section>
 <section id="coding-standards">

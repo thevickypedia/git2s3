@@ -3,7 +3,14 @@ import sys
 import time
 from typing import List, Optional
 
-from pydantic import BaseModel, DirectoryPath, HttpUrl, PositiveInt, field_validator
+from pydantic import (
+    BaseModel,
+    DirectoryPath,
+    Field,
+    HttpUrl,
+    PositiveInt,
+    field_validator,
+)
 from pydantic_settings import BaseSettings
 
 if sys.version_info.minor > 10:
@@ -77,6 +84,7 @@ class EnvConfig(BaseSettings):
     git_owner: str
     git_token: str
     git_ignore: List[str] = []
+    max_per_page: PositiveInt = Field(default=100, ge=1, le=100)
 
     incomplete_upload: bool = False
     source: SourceControl | List[SourceControl] = SourceControl.all
@@ -84,11 +92,11 @@ class EnvConfig(BaseSettings):
     debug: bool = False
     local_store: bool = False
 
+    aws_bucket_name: str
     aws_profile_name: str | None = None
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
     aws_region_name: str | None = None
-    aws_bucket_name: str
     aws_s3_prefix: str = f"github_{int(time.time())}"
     boto3_retry_attempts: int = 10
     boto3_retry_mode: Boto3RetryMode = Boto3RetryMode.standard

@@ -20,9 +20,6 @@ version = "0.0.5"
     type=click.Path(exists=True),
     help="Environment configuration filepath.",
 )
-@click.option(
-    "--max", "-M", type=int, help="Maximum number of repos/gists to fetch per page."
-)
 def commandline(*args, **kwargs) -> None:
     """Starter function to invoke Git2S3 via CLI commands.
 
@@ -30,7 +27,6 @@ def commandline(*args, **kwargs) -> None:
         - ``--version | -V``: Prints the version.
         - ``--help | -H``: Prints the help section.
         - ``--env | -E``: Environment configuration filepath.
-        - ``--max | -M``: Maximum number of repos/gists to fetch per page.
 
     **Commands**
         ``start | run``: Initiates the backup process.
@@ -40,7 +36,6 @@ def commandline(*args, **kwargs) -> None:
         "--version | -V": "Prints the version.",
         "--help | -H": "Prints the help section.",
         "--env | -E": "Environment configuration filepath.",
-        "--max | -M": "Maximum number of repos/gists to fetch per page.",
         "start | run": "Initiates the backup process.",
     }
     # weird way to increase spacing to keep all values monotonic
@@ -60,10 +55,7 @@ def commandline(*args, **kwargs) -> None:
         sys.exit(0)
     trigger = kwargs.get("start") or kwargs.get("run")
     if trigger and trigger.lower() in ("start", "run"):
-        # Click doesn't support assigning defaults like traditional dictionaries, so kwargs.get("max", 100) won't work
-        Git2S3(
-            env_file=kwargs.get("env") or ".env", max_per_page=kwargs.get("max") or 100
-        ).start()
+        Git2S3(env_file=kwargs.get("env") or ".env").start()
         sys.exit(0)
     elif trigger:
         click.secho(f"\n{trigger!r} - Invalid command", fg="red")
