@@ -397,7 +397,13 @@ class Git2S3:
 
     def start(self) -> None:
         """Start the cloning process and upload to S3 once cloning completes successfully."""
-        self.logger.info("Starting cloning process...")
+        if self.env.cut_off_days:
+            self.logger.info(
+                "Starting cloning process for repos that were updated in the last %d day(s)",
+                self.env.cut_off_days,
+            )
+        else:
+            self.logger.info("Starting cloning process...")
         # Both processes run concurrently, calling the same function with different arguments
         processes = [
             ThreadPool(processes=1).apply_async(
