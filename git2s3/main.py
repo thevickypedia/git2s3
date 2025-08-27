@@ -81,7 +81,7 @@ class Git2S3:
                 )
                 self.env.source.remove(config.SourceControl.gist)
         self.base_url = f"{self.env.git_api_url}/{profile}/{self.env.git_owner}"
-        metrics = {"total": 0, "success": 0, "failed": 0}
+        metrics = {"fetched": 0, "clonable": 0, "success": 0, "failed": 0}
         self.clones = {x.value: metrics for x in self.env.source if x.value != "wiki"}
 
     def profile_type(self) -> str:
@@ -165,7 +165,6 @@ class Git2S3:
                 f"Invalid field type. Please choose from {config.SourceControl.repo!r} or {config.SourceControl.gist!r}"
             )
         idx = 1
-        total = 0
         while True:
             self.logger.debug("Fetching repos from page %d", idx)
             try:
@@ -186,15 +185,12 @@ class Git2S3:
                 self.logger.debug(
                     "Repositories in page %d: %d", idx, len(json_response)
                 )
-                total += len(json_response)
                 # Yields dictionary from a list
                 yield from json_response
                 idx += 1
             else:
                 self.logger.debug("No repos found in page: %d, ending loop.", idx)
                 break
-        msg = f"Total {source.value}s cloned: {total}"
-        self.logger.info(msg)
 
     def set_pat(self, url: str | HttpUrl) -> str | HttpUrl | None:
         """Creates an authenticated URL by updating the netloc, and sets that as the origin URL.
@@ -363,6 +359,7 @@ class Git2S3:
         with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
             for src in self.get_all(source):
                 identifier = src.get("name") or src.get("id")
+                self.clones[source.value]["fetched"] += 1
                 if identifier.lower() in self.env.git_ignore:
                     self.logger.info(
                         "Skipping %s: '%s', reason: git_ignore", source, identifier
@@ -381,7 +378,7 @@ class Git2S3:
                         self.env.cut_off_days,
                     )
                     continue
-                self.clones[source.value]["total"] += 1
+                self.clones[source.value]["clonable"] += 1
                 future = executor.submit(self.worker, src)
                 futures[future] = identifier
         exception = True
@@ -428,16 +425,16 @@ class Git2S3:
         if awaiter:
             self.logger.info("All sources were cloned successfully.")
         else:
+            # Proceed with a warning if incomplete upload is allowed
             if self.env.incomplete_upload:
+                self.logger.warning(
+                    "Some cloning processes failed. Proceeding with incomplete upload."
+                )
+            else:
                 self.logger.error(
                     "Cloning process did not complete successfully. Skipping S3 backup."
                 )
                 return
-            else:
-                self.logger.warning(
-                    "Some cloning processes failed. Proceeding with incomplete upload."
-                )
-        self.logger.info("Cloning process completed.")
         if total := squire.check_file_presence(self.clone_dir):
             self.logger.info(
                 "Initiating S3 upload process. Total number of files: %d", total
