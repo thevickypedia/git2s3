@@ -376,7 +376,7 @@ class Git2S3:
                     n_days=self.env.cut_off_days,
                 ):
                     self.logger.info(
-                        "Skipping %s: '%s', reason: updated within last [%d days]",
+                        "Skipping %s: '%s', reason: no push/update in the last [%d days]",
                         source,
                         identifier,
                         self.env.cut_off_days,
@@ -442,9 +442,11 @@ class Git2S3:
         if total := squire.check_file_presence(self.clone_dir):
             if self.env.dry_run:
                 self.logger.info(
-                    "Dry run is set to true, skipping upload to S3. Files staged: %d",
+                    "Dry run is set to true, skipping upload to S3 and enforcing local store. Files staged: %d",
                     total,
                 )
+                # Otherwise there is no point in cloning all the repos
+                self.env.local_store = True
             else:
                 self.logger.info(
                     "Initiating S3 upload process. Total number of files: %d", total
