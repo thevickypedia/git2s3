@@ -7,7 +7,6 @@ import threading
 import warnings
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
 from multiprocessing.pool import ThreadPool
 from typing import Dict
 from urllib.parse import urlsplit, urlunsplit
@@ -58,6 +57,9 @@ class Git2S3:
             raise BaseException(
                 "ERROR: Cannot start backup process when the current directory is already a Git repository."
             )
+        # TODO: There is a conflict here - git.Repo() will only work if it is a git repo
+        #  However, the above exception will prevent running it from a git repo
+        #   May be its time to remove dependency on gitpython and rely on CLI entirely (see what's being used right now)
         try:
             self.repo = git.Repo()
             self.origin = self.repo.remote()
@@ -457,9 +459,7 @@ class Git2S3:
                         "%d objects were uploaded to S3 successfully.", total
                     )
             if self.env.local_store:
-                local_store = os.path.join(
-                    self.env.backup_dir, datetime.now().strftime("%b%d%Y_%H%M")
-                )
+                local_store = os.path.join(self.env.backup_dir, config.BACKUP_PREFIX)
                 if os.path.isdir(local_store):
                     self.logger.warning(
                         "Local store [%s] is already available, deleting it..",

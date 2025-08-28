@@ -1,7 +1,7 @@
 import os
 import pathlib
 import sys
-import time
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import (
@@ -21,6 +21,9 @@ else:
 
     class StrEnum(str, Enum):
         """Override for python 3.10 due to lack of StrEnum."""
+
+
+BACKUP_PREFIX: str = "Git2S3_Backup_" + datetime.now().strftime("%b%d%Y_%H%M")
 
 
 class LogOptions(StrEnum):
@@ -100,7 +103,7 @@ class EnvConfig(BaseSettings):
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
     aws_region_name: str | None = None
-    aws_s3_prefix: str = f"github_{int(time.time())}"
+    aws_s3_prefix: str = BACKUP_PREFIX
     boto3_retry_attempts: int = 10
     boto3_retry_mode: Boto3RetryMode = Boto3RetryMode.standard
 
