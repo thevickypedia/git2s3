@@ -110,10 +110,6 @@ class EnvConfig(BaseSettings):
     # Only backup the repos that were "updated"/"pushed to" in the last N days
     cut_off_days: PositiveInt | None = None
 
-    # TODO: Implement back tracking logic with S3
-    # # Boolean flag to back-trace and upload only the repos that were modified
-    # back_trace: bool = False
-
     @classmethod
     def from_env_file(cls, filename: pathlib.Path) -> "EnvConfig":
         """Create an instance of EnvConfig from environment file.

@@ -11,9 +11,7 @@ from multiprocessing.pool import ThreadPool
 from typing import Dict
 from urllib.parse import urlsplit, urlunsplit
 
-import git
 import requests
-from git.exc import GitCommandError, InvalidGitRepositoryError
 from pydantic import HttpUrl
 
 from git2s3 import config, exc, s3, squire
@@ -48,26 +46,14 @@ class Git2S3:
         }
         # Proceeding **will** most likely switch the origin URL and mess up the entire local stack
         # Make sure both the current working directory, and the backup directory (destination) is not a GIT repository
-        if (
-            ".git" in os.listdir()
-            and os.path.isdir(".git")
-            or ".git" in os.listdir(self.env.backup_dir)
+        if (".git" in os.listdir() and os.path.isdir(".git")) or (
+            ".git" in os.listdir(self.env.backup_dir)
             and os.path.isdir(os.path.join(self.env.backup_dir, ".git"))
         ):
             raise BaseException(
                 "ERROR: Cannot start backup process when the current directory is already a Git repository."
             )
-        # TODO: There is a conflict here - git.Repo() will only work if it is a git repo
-        #  However, the above exception will prevent running it from a git repo
-        #   May be its time to remove dependency on gitpython and rely on CLI entirely (see what's being used right now)
-        try:
-            self.repo = git.Repo()
-            self.origin = self.repo.remote()
-        except (InvalidGitRepositoryError, ValueError):
-            self.logger.warning("Unable to use git python, switching to git cli")
-            self.cli("command -v git")  # Make sure git cli works
-            self.repo = None
-            self.origin = None
+        self.cli("command -v git")  # Make sure git cli works
         self.clone_dir = os.path.join(self.env.backup_dir, self.env.git_owner)
         warnings.simplefilter("always", exc.DirectoryExists)
         warnings.simplefilter("always", exc.UnsupportedSource)
@@ -220,9 +206,6 @@ class Git2S3:
                 url_split.fragment,
             )
         )
-        if self.repo and self.origin:
-            self.origin.config_writer.set("url", joined)
-            self.origin.config_writer.release()
         return joined
 
     def clone_wiki(self, datastore: config.DataStore) -> None:
@@ -235,7 +218,7 @@ class Git2S3:
         self.logger.debug("Cloning wiki for %s", datastore.name)
         wiki_url = str(datastore.clone_url).replace(".git", ".wiki.git")
         if datastore.private:
-            wiki_dest = str(
+            destination = str(
                 os.path.join(
                     self.clone_dir,
                     datastore.source.value,
@@ -244,7 +227,7 @@ class Git2S3:
                 )
             )
         else:
-            wiki_dest = str(
+            destination = str(
                 os.path.join(
                     self.clone_dir,
                     datastore.source.value,
@@ -252,31 +235,20 @@ class Git2S3:
                     f"{datastore.name}.wiki",
                 )
             )
-        os.makedirs(wiki_dest, exist_ok=True)
+        os.makedirs(destination, exist_ok=True)
         wiki_url = self.set_pat(wiki_url)
-        try:
-            if self.repo and self.origin:
-                self.repo.clone_from(wiki_url, wiki_dest)
-            else:
-                # Skip if cloning failed, as wiki pages are not guaranteed to exist
-                output = self.cli(f"cd {wiki_dest} && git clone {wiki_url}", fail=False)
-                if output == 0:
-                    try:
-                        squire.archer(wiki_dest)
-                    except AssertionError:
-                        self.logger.error(
-                            "Failed to create a zip file for %s", datastore.name
-                        )
-                        raise exc.ArchiveError(
-                            f"Failed to create a zip file for {datastore.name!r}"
-                        )
-                else:
-                    shutil.rmtree(wiki_dest)
-        except GitCommandError as error:
-            msg = error.stderr or error.stdout or ""
-            msg = msg.strip().replace("\n", "").replace("'", "").replace('"', "")
-            self.logger.debug(msg)
-            shutil.rmtree(wiki_dest)
+        # Skip if cloning failed, as wiki pages are not guaranteed to exist
+        output = self.cli(f"cd {destination} && git clone {wiki_url}", fail=False)
+        if output == 0:
+            try:
+                squire.archer(destination)
+            except AssertionError:
+                self.logger.error("Failed to create a zip file for %s", datastore.name)
+                raise exc.ArchiveError(
+                    f"Failed to create a zip file for {datastore.name!r}"
+                )
+        else:
+            shutil.rmtree(destination)
 
     def worker(self, source: Dict[str, str]) -> None:
         """Clones repository/gist/wiki from GitHub.
@@ -311,35 +283,23 @@ class Git2S3:
             ).start()
         os.makedirs(destination, exist_ok=True)
         datastore.clone_url = self.set_pat(datastore.clone_url)
+        self.cli(f"cd {destination} && git clone {datastore.clone_url}", retry=True)
         try:
-            if self.repo and self.origin:
-                self.repo.clone_from(datastore.clone_url, destination)
-            else:
-                self.cli(
-                    f"cd {destination} && git clone {datastore.clone_url}", retry=True
-                )
-            try:
-                if datastore.description:
-                    desc_file = os.path.join(destination, "description_git2s3.txt")
-                    with open(desc_file, "w") as desc:
-                        desc.write(datastore.description)
-                        desc.flush()
-            except Exception as warning:
-                # Adding description file is only an added feature, so no need to fail
-                self.logger.warning(warning)
-            try:
-                squire.archer(destination)
-            except AssertionError:
-                self.logger.error("Failed to create a zip file for %s", datastore.name)
-                raise exc.ArchiveError(
-                    f"Failed to create a zip file for {datastore.name!r}"
-                )
-        except GitCommandError as error:
-            msg = error.stderr or error.stdout or ""
-            msg = msg.strip().replace("\n", "").replace("'", "").replace('"', "")
-            self.logger.error(msg)
-            # Raise an exception to indicate that the thread failed
-            raise exc.Git2S3Error(msg)
+            if datastore.description:
+                desc_file = os.path.join(destination, "description_git2s3.txt")
+                with open(desc_file, "w") as desc:
+                    desc.write(datastore.description)
+                    desc.flush()
+        except Exception as warning:
+            # Adding description file is only an added feature, so no need to fail
+            self.logger.warning(warning)
+        try:
+            squire.archer(destination)
+        except AssertionError:
+            self.logger.error("Failed to create a zip file for %s", datastore.name)
+            raise exc.ArchiveError(
+                f"Failed to create a zip file for {datastore.name!r}"
+            )
 
     def cloner(self, source: config.SourceControl) -> bool:
         """Clones all the repos/gists concurrently.
