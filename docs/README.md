@@ -65,7 +65,7 @@ git2s3 start
 - **LOG** - Log options to log to a `file` or `stdout`. _Does not apply when custom logger is used_
 - **DEBUG** - Boolean flag to enable debug level logging. _Does not apply when custom logger is used_
 - **DRY_RUN** - Boolean flag to skip upload to S3. Defaults to `False`
-- **STORE_LOCAL** - Boolean flag to store the backup locally. Defaults to `False`
+- **LOCAL_STORE** - Boolean flag to store the backup locally. Defaults to `False`
 - **INCOMPLETE_UPLOAD** - Boolean flag to upload incomplete cloning. Defaults to `False`
 - **AWS_PROFILE_NAME** - AWS profile name. Uses the CLI config value `AWS_DEFAULT_PROFILE` by default.
 - **AWS_ACCESS_KEY_ID** - AWS access key ID. Uses the CLI config value `AWS_ACCESS_KEY_ID` by default.

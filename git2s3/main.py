@@ -7,6 +7,7 @@ import threading
 import warnings
 from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
 from multiprocessing.pool import ThreadPool
 from typing import Dict
 from urllib.parse import urlsplit, urlunsplit
@@ -46,10 +47,13 @@ class Git2S3:
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        clone_dir_base = os.getcwd()
         # Proceeding **will** most likely switch the origin URL and mess up the entire local stack
-        if ".git" in os.listdir(clone_dir_base) and os.path.isdir(
-            os.path.join(clone_dir_base, ".git")
+        # Make sure both the current working directory, and the backup directory (destination) is not a GIT repository
+        if (
+            ".git" in os.listdir()
+            and os.path.isdir(".git")
+            or ".git" in os.listdir(self.env.backup_dir)
+            and os.path.isdir(os.path.join(self.env.backup_dir, ".git"))
         ):
             raise BaseException(
                 "ERROR: Cannot start backup process when the current directory is already a Git repository."
@@ -62,7 +66,7 @@ class Git2S3:
             self.cli("command -v git")  # Make sure git cli works
             self.repo = None
             self.origin = None
-        self.clone_dir = os.path.join(clone_dir_base, self.env.git_owner)
+        self.clone_dir = os.path.join(self.env.backup_dir, self.env.git_owner)
         warnings.simplefilter("always", exc.DirectoryExists)
         warnings.simplefilter("always", exc.UnsupportedSource)
         if os.path.isdir(self.clone_dir) and os.listdir(self.clone_dir):
@@ -246,8 +250,7 @@ class Git2S3:
                     f"{datastore.name}.wiki",
                 )
             )
-        if not os.path.isdir(wiki_dest):
-            os.makedirs(wiki_dest)
+        os.makedirs(wiki_dest, exist_ok=True)
         wiki_url = self.set_pat(wiki_url)
         try:
             if self.repo and self.origin:
@@ -304,8 +307,7 @@ class Git2S3:
             threading.Thread(
                 target=self.clone_wiki, args=(datastore,), daemon=True
             ).start()
-        if not os.path.isdir(destination):
-            os.makedirs(destination)
+        os.makedirs(destination, exist_ok=True)
         datastore.clone_url = self.set_pat(datastore.clone_url)
         try:
             if self.repo and self.origin:
@@ -436,19 +438,38 @@ class Git2S3:
                 )
                 return
         if total := squire.check_file_presence(self.clone_dir):
-            self.logger.info(
-                "Initiating S3 upload process. Total number of files: %d", total
-            )
             if self.env.dry_run:
-                self.logger.info("DRY_RUN set to true, skipping upload to S3")
-                return
-            s3_upload = s3.Uploader(self.env, self.logger)
-            if failed := s3_upload.trigger():
-                self.logger.error("%d / %d objects failed to upload.", failed, total)
+                self.logger.info(
+                    "Dry run is set to true, skipping upload to S3. Files staged: %d",
+                    total,
+                )
             else:
-                self.logger.info("%d objects were uploaded to S3 successfully.", total)
-                if not self.env.local_store:
-                    self.logger.info("Deleting local copy!")
-                    shutil.rmtree(self.clone_dir)
+                self.logger.info(
+                    "Initiating S3 upload process. Total number of files: %d", total
+                )
+                s3_upload = s3.Uploader(self.env, self.logger)
+                if failed := s3_upload.trigger():
+                    self.logger.error(
+                        "%d / %d objects failed to upload.", failed, total
+                    )
+                else:
+                    self.logger.info(
+                        "%d objects were uploaded to S3 successfully.", total
+                    )
+            if self.env.local_store:
+                local_store = os.path.join(
+                    self.env.backup_dir, datetime.now().strftime("%b%d%Y_%H%M")
+                )
+                if os.path.isdir(local_store):
+                    self.logger.warning(
+                        "Local store [%s] is already available, deleting it..",
+                        local_store,
+                    )
+                    shutil.rmtree(local_store)
+                shutil.move(self.clone_dir, local_store)
+                self.logger.info("Local copy stored at: [%s]", local_store)
+            else:
+                self.logger.info("Deleting local copy!")
+                shutil.rmtree(self.clone_dir)
         else:
             self.logger.warning("No files found for S3 upload process.")

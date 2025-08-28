@@ -1,3 +1,4 @@
+import os
 import pathlib
 import sys
 import time
@@ -85,6 +86,7 @@ class EnvConfig(BaseSettings):
     git_token: str
     git_ignore: List[str] = []
     max_per_page: PositiveInt = Field(default=100, ge=1, le=100)
+    backup_dir: DirectoryPath = os.getcwd()
 
     source: SourceControl | List[SourceControl] = SourceControl.all
     log: LogOptions = LogOptions.stdout
