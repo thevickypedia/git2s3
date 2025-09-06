@@ -47,8 +47,7 @@ class Git2S3:
         # Proceeding **will** most likely switch the origin URL and mess up the entire local stack
         # Make sure both the current working directory, and the backup directory (destination) is not a GIT repository
         if (".git" in os.listdir() and os.path.isdir(".git")) or (
-            ".git" in os.listdir(self.env.backup_dir)
-            and os.path.isdir(os.path.join(self.env.backup_dir, ".git"))
+            ".git" in os.listdir(self.env.backup_dir) and os.path.isdir(os.path.join(self.env.backup_dir, ".git"))
         ):
             raise BaseException(
                 "ERROR: Cannot start backup process when the current directory is already a Git repository."
@@ -86,17 +85,13 @@ class Git2S3:
             Returns the profile type.
         """
         try:
-            response = self.session.get(
-                f"{self.env.git_api_url}/orgs/{self.env.git_owner}"
-            )
+            response = self.session.get(f"{self.env.git_api_url}/orgs/{self.env.git_owner}")
             assert response.ok
             return "orgs"
         except (requests.RequestException, AssertionError):
             pass
         try:
-            response = self.session.get(
-                f"{self.env.git_api_url}/users/{self.env.git_owner}"
-            )
+            response = self.session.get(f"{self.env.git_api_url}/users/{self.env.git_owner}")
             assert response.ok
             return "users"
         except (requests.RequestException, AssertionError):
@@ -119,9 +114,7 @@ class Git2S3:
         """
         redacted = cmd.replace(self.env.git_token, "****")
         try:
-            ret_code = subprocess.check_call(
-                cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, shell=True
-            )
+            ret_code = subprocess.check_call(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT, shell=True)
         except subprocess.CalledProcessError as error:
             ret_code = error.returncode
             if fail:
@@ -134,9 +127,7 @@ class Git2S3:
                 self.logger.warning("Retrying the command: %s", redacted)
                 return self.cli(cmd, fail, False)
             if fail:
-                raise AssertionError(
-                    f"{redacted!r} - returned a non-zero exit code: {ret_code}"
-                )
+                raise AssertionError(f"{redacted!r} - returned a non-zero exit code: {ret_code}")
         return ret_code
 
     def get_all(self, source: config.SourceControl) -> Generator[Dict[str, str]]:
@@ -170,15 +161,11 @@ class Git2S3:
             except (requests.RequestException, AssertionError) as error:
                 self.logger.error("Failed to fetch repos on page: %d - %s", idx, error)
                 if idx == 1:
-                    raise exc.GitHubAPIError(
-                        f"Failed to fetch {source.value}s from {self.env.git_owner!r}."
-                    )
+                    raise exc.GitHubAPIError(f"Failed to fetch {source.value}s from {self.env.git_owner!r}.")
                 break
             json_response = response.json()
             if json_response:
-                self.logger.debug(
-                    "Repositories in page %d: %d", idx, len(json_response)
-                )
+                self.logger.debug("Repositories in page %d: %d", idx, len(json_response))
                 # Yields dictionary from a list
                 yield from json_response
                 idx += 1
@@ -246,9 +233,7 @@ class Git2S3:
                 squire.archer(destination)
             except AssertionError:
                 self.logger.error("Failed to create a zip file for %s", datastore.name)
-                raise exc.ArchiveError(
-                    f"Failed to create a zip file for {datastore.name!r}"
-                )
+                raise exc.ArchiveError(f"Failed to create a zip file for {datastore.name!r}")
         else:
             shutil.rmtree(destination)
 
@@ -265,24 +250,14 @@ class Git2S3:
         datastore = squire.source_detector(source, self.env)
         self.logger.info("Cloning %s: %s", datastore.source, datastore.name)
         if datastore.private:
-            destination = str(
-                os.path.join(
-                    self.clone_dir, datastore.source.value, "private", datastore.name
-                )
-            )
+            destination = str(os.path.join(self.clone_dir, datastore.source.value, "private", datastore.name))
         else:
-            destination = str(
-                os.path.join(
-                    self.clone_dir, datastore.source.value, "public", datastore.name
-                )
-            )
+            destination = str(os.path.join(self.clone_dir, datastore.source.value, "public", datastore.name))
         # only repos have this field anyway
         if config.SourceControl.wiki in self.env.source and source.get("has_wiki"):
             # run as daemon and don't care about the output for wiki
             # 'has_wiki' flag will always be true even if there are no files to clone
-            threading.Thread(
-                target=self.clone_wiki, args=(datastore,), daemon=True
-            ).start()
+            threading.Thread(target=self.clone_wiki, args=(datastore,), daemon=True).start()
         os.makedirs(destination, exist_ok=True)
         datastore.clone_url = self.set_pat(datastore.clone_url)
         self.cli(f"cd {destination} && git clone {datastore.clone_url}", retry=True)
@@ -299,9 +274,7 @@ class Git2S3:
             squire.archer(destination)
         except AssertionError:
             self.logger.error("Failed to create a zip file for %s", datastore.name)
-            raise exc.ArchiveError(
-                f"Failed to create a zip file for {datastore.name!r}"
-            )
+            raise exc.ArchiveError(f"Failed to create a zip file for {datastore.name!r}")
 
     def cloner(self, source: config.SourceControl) -> bool:
         """Clones all the repos/gists concurrently.
@@ -327,9 +300,7 @@ class Git2S3:
                 identifier = src.get("name") or src.get("id")
                 self.clones[source]["fetched"] += 1
                 if identifier.lower() in self.env.git_ignore:
-                    self.logger.info(
-                        "Skipping %s: '%s', reason: git_ignore", source, identifier
-                    )
+                    self.logger.info("Skipping %s: '%s', reason: git_ignore", source, identifier)
                     continue
                 # pushed_at - works only for repos
                 # updated_at - works for both repos and gists but includes updates like PRs, issues, metadata etc
@@ -347,9 +318,7 @@ class Git2S3:
                         )
                         continue
                 else:
-                    self.logger.warning(
-                        "Failed to get last update timestamp for: %s", identifier
-                    )
+                    self.logger.warning("Failed to get last update timestamp for: %s", identifier)
                 self.logger.info("Cloning %s: '%s'", source.value, identifier)
                 self.clones[source]["clonable"] += 1
                 future = executor.submit(self.worker, src)
@@ -378,21 +347,11 @@ class Git2S3:
                 str(self.env.dry_run).lower(),
             )
         else:
-            self.logger.info(
-                "Starting cloning process, dry run: %s", str(self.env.dry_run).lower()
-            )
+            self.logger.info("Starting cloning process, dry run: %s", str(self.env.dry_run).lower())
         # Both processes run concurrently, calling the same function with different arguments
-        processes = [
-            ThreadPool(processes=1).apply_async(
-                self.cloner, args=(config.SourceControl.repo,)
-            )
-        ]
+        processes = [ThreadPool(processes=1).apply_async(self.cloner, args=(config.SourceControl.repo,))]
         if config.SourceControl.gist in self.env.source:
-            processes.append(
-                ThreadPool(processes=1).apply_async(
-                    self.cloner, args=(config.SourceControl.gist,)
-                )
-            )
+            processes.append(ThreadPool(processes=1).apply_async(self.cloner, args=(config.SourceControl.gist,)))
         awaiter = all(process.get() for process in processes)
         self.logger.info("\n%s\n", json.dumps(self.clones, indent=2))
         if awaiter:
@@ -400,13 +359,9 @@ class Git2S3:
         else:
             # Proceed with a warning if incomplete upload is allowed
             if self.env.incomplete_upload:
-                self.logger.warning(
-                    "Some cloning processes failed. Proceeding with incomplete upload."
-                )
+                self.logger.warning("Some cloning processes failed. Proceeding with incomplete upload.")
             else:
-                self.logger.error(
-                    "Cloning process did not complete successfully. Skipping S3 backup."
-                )
+                self.logger.error("Cloning process did not complete successfully. Skipping S3 backup.")
                 return
         if total := squire.check_file_presence(self.clone_dir):
             if self.env.dry_run:
@@ -417,18 +372,12 @@ class Git2S3:
                 # Otherwise there is no point in cloning all the repos
                 self.env.local_store = True
             else:
-                self.logger.info(
-                    "Initiating S3 upload process. Total number of files: %d", total
-                )
+                self.logger.info("Initiating S3 upload process. Total number of files: %d", total)
                 s3_upload = s3.Uploader(self.env, self.logger)
                 if failed := s3_upload.trigger():
-                    self.logger.error(
-                        "%d / %d objects failed to upload.", failed, total
-                    )
+                    self.logger.error("%d / %d objects failed to upload.", failed, total)
                 else:
-                    self.logger.info(
-                        "%d objects were uploaded to S3 successfully.", total
-                    )
+                    self.logger.info("%d objects were uploaded to S3 successfully.", total)
             if self.env.local_store:
                 local_store = os.path.join(self.env.backup_dir, config.BACKUP_PREFIX)
                 if os.path.isdir(local_store):

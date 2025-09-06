@@ -39,16 +39,10 @@ class Uploader:
         self.base_path = os.path.join(os.getcwd(), env.git_owner)
         self.s3_client = session.client(
             "s3",
-            config=Config(
-                retries=dict(
-                    max_attempts=env.boto3_retry_attempts, mode=env.boto3_retry_mode
-                )
-            ),
+            config=Config(retries=dict(max_attempts=env.boto3_retry_attempts, mode=env.boto3_retry_mode)),
         )
 
-    def upload_file(
-        self, local_file_path: str | os.PathLike, s3_file_path: str | os.PathLike
-    ) -> None:
+    def upload_file(self, local_file_path: str | os.PathLike, s3_file_path: str | os.PathLike) -> None:
         """Uploads an object to S3.
 
         Args:
@@ -75,9 +69,7 @@ class Uploader:
                     local_file_path = os.path.join(root, file)
                     relative_path = os.path.relpath(local_file_path, self.base_path)
                     s3_file_path = os.path.join(self.prefix, relative_path)
-                    future = executor.submit(
-                        self.upload_file, local_file_path, s3_file_path
-                    )
+                    future = executor.submit(self.upload_file, local_file_path, s3_file_path)
                     futures[future] = s3_file_path
         failed = 0
         for future in as_completed(futures):

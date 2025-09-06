@@ -98,9 +98,7 @@ def default_logger(env: config.EnvConfig) -> logging.Logger:
     if env.log == config.LogOptions.file:
         if not os.path.isdir("logs"):
             os.mkdir("logs")
-        logfile: str = datetime.now().strftime(
-            os.path.join("logs", "git2s3_%d-%m-%Y.log")
-        )
+        logfile: str = datetime.now().strftime(os.path.join("logs", "git2s3_%d-%m-%Y.log"))
         handler = logging.FileHandler(filename=logfile)
     else:
         handler = logging.StreamHandler()
@@ -110,9 +108,7 @@ def default_logger(env: config.EnvConfig) -> logging.Logger:
     else:
         logger.setLevel(level=logging.INFO)
     handler.setFormatter(
-        fmt=logging.Formatter(
-            fmt="%(asctime)s - %(levelname)-8s - [%(funcName)s:%(lineno)d] - %(message)s"
-        )
+        fmt=logging.Formatter(fmt="%(asctime)s - %(levelname)-8s - [%(funcName)s:%(lineno)d] - %(message)s")
     )
     logger.addHandler(hdlr=handler)
     return logger

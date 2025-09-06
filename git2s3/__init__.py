@@ -42,16 +42,13 @@ def commandline(*args, **kwargs) -> None:
     _longest_key = len(max(options.keys()))
     _pretext = "\n\t* "
     choices = _pretext + _pretext.join(
-        f"{k} {'·' * (_longest_key - len(k) + 8)}→ {v}".expandtabs()
-        for k, v in options.items()
+        f"{k} {'·' * (_longest_key - len(k) + 8)}→ {v}".expandtabs() for k, v in options.items()
     )
     if kwargs.get("version"):
         click.echo(f"Git2S3 {version}")
         sys.exit(0)
     if kwargs.get("help"):
-        click.echo(
-            f"\nUsage: git2s3 [arbitrary-command]\nOptions (and corresponding behavior):{choices}"
-        )
+        click.echo(f"\nUsage: git2s3 [arbitrary-command]\nOptions (and corresponding behavior):{choices}")
         sys.exit(0)
     trigger = kwargs.get("start") or kwargs.get("run")
     if trigger and trigger.lower() in ("start", "run"):
@@ -61,7 +58,5 @@ def commandline(*args, **kwargs) -> None:
         click.secho(f"\n{trigger!r} - Invalid command", fg="red")
     else:
         click.secho("\nNo command provided", fg="red")
-    click.echo(
-        f"Usage: git2s3 [arbitrary-command]\nOptions (and corresponding behavior):{choices}"
-    )
+    click.echo(f"Usage: git2s3 [arbitrary-command]\nOptions (and corresponding behavior):{choices}")
     sys.exit(1)
