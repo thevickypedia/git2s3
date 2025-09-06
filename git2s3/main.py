@@ -74,7 +74,9 @@ class Git2S3:
                 self.env.source.remove(config.SourceControl.gist)
         self.base_url = f"{self.env.git_api_url}/{profile}/{self.env.git_owner}"
         metrics = {"fetched": 0, "clonable": 0, "success": 0, "failed": 0}
-        self.clones = {x.value: metrics for x in self.env.source if x.value != "wiki"}
+        self.clones: Dict[config.SourceControl, Dict[str, int]] = {
+            src: metrics for src in self.env.source if src != config.SourceControl.wiki
+        }
 
     def profile_type(self) -> str:
         """Get the profile type.
@@ -323,7 +325,7 @@ class Git2S3:
         with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
             for src in self.get_all(source):
                 identifier = src.get("name") or src.get("id")
-                self.clones[source.value]["fetched"] += 1
+                self.clones[source]["fetched"] += 1
                 if identifier.lower() in self.env.git_ignore:
                     self.logger.info(
                         "Skipping %s: '%s', reason: git_ignore", source, identifier
@@ -331,24 +333,31 @@ class Git2S3:
                     continue
                 # pushed_at - works only for repos
                 # updated_at - works for both repos and gists but includes updates like PRs, issues, metadata etc
-                if self.env.cut_off_days and squire.is_older_than_n_days(
-                    timestamp_str=src.get("pushed_at") or src.get("updated_at"),
-                    n_days=self.env.cut_off_days,
-                ):
-                    self.logger.info(
-                        "Skipping %s: '%s', reason: no push/update in the last [%d days]",
-                        source,
-                        identifier,
-                        self.env.cut_off_days,
+                last_updated = src.get("pushed_at") or src.get("updated_at")
+                if last_updated:
+                    if self.env.cut_off_days and squire.is_older_than_n_days(
+                        timestamp_str=last_updated,
+                        n_days=self.env.cut_off_days,
+                    ):
+                        self.logger.info(
+                            "Skipping %s: '%s', reason: no push/update in the last [%d days]",
+                            source.value,
+                            identifier,
+                            self.env.cut_off_days,
+                        )
+                        continue
+                else:
+                    self.logger.warning(
+                        "Failed to get last update timestamp for: %s", identifier
                     )
-                    continue
-                self.clones[source.value]["clonable"] += 1
+                self.logger.info("Cloning %s: '%s'", source.value, identifier)
+                self.clones[source]["clonable"] += 1
                 future = executor.submit(self.worker, src)
                 futures[future] = identifier
         exception = True
         for future in as_completed(futures):
             if future.exception():
-                self.clones[source.value]["failed"] += 1
+                self.clones[source]["failed"] += 1
                 self.logger.error(
                     "Thread cloning the %s '%s' received an exception: %s",
                     source,
@@ -357,7 +366,7 @@ class Git2S3:
                 )
                 exception = False
             else:
-                self.clones[source.value]["success"] += 1
+                self.clones[source]["success"] += 1
         return exception
 
     def start(self) -> None:

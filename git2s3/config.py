@@ -44,7 +44,6 @@ class SourceControl(StrEnum):
 
     """
 
-    all: str = "all"
     gist: str = "gist"
     repo: str = "repo"
     wiki: str = "wiki"
@@ -91,7 +90,11 @@ class EnvConfig(BaseSettings):
     max_per_page: PositiveInt = Field(default=100, ge=1, le=100)
     backup_dir: DirectoryPath = os.getcwd()
 
-    source: SourceControl | List[SourceControl] = SourceControl.all
+    source: List[SourceControl] = [
+        SourceControl.repo,
+        SourceControl.wiki,
+        SourceControl.gist,
+    ]
     log: LogOptions = LogOptions.stdout
     debug: bool = False
     dry_run: bool = False
@@ -129,19 +132,8 @@ class EnvConfig(BaseSettings):
         return cls(_env_file=filename)
 
     @field_validator("source", mode="after", check_fields=True)
-    def parse_source(cls, value: SourceControl | List[SourceControl]) -> DirectoryPath:
+    def parse_source(cls, value: List[SourceControl]) -> DirectoryPath:
         """Validate and parse 'source' to remove 'all' from the source option."""
-        if isinstance(value, list):
-            if value == [SourceControl.all] or SourceControl.all in value:
-                return [SourceControl.repo, SourceControl.gist, SourceControl.wiki]
-            if SourceControl.repo not in value:
-                raise ValueError(
-                    f"{value!r} must contain {SourceControl.repo.value!r} as a source type"
-                )
-            return value
-        if value == SourceControl.all:
-            return [SourceControl.repo, SourceControl.gist, SourceControl.wiki]
-        value = [value]
         if SourceControl.repo in value:
             return value
         raise ValueError(f"Must contain {SourceControl.repo.value!r} as a source type")
