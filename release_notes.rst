@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v0.1.1 (09/06/2025)
+-------------------
+- Removed dependency on ``gitpython`` module
+- Handles missing ``pushed_at`` or ``updated_at`` values in API response
+- Avoids converting enums to strings for condition checks
+- Enforces ``source`` env var to always be a ``list`` type
+- Improved linting
+- **Full Changelog**: https://github.com/thevickypedia/git2s3/compare/v0.1.0...v0.1.1
+
 v0.1.0 (08/27/2025)
 -------------------
 - Includes a ``cut_off_days`` threshold to skip repos/gists that weren't updated in the last N days
